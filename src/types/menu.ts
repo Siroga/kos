@@ -1,97 +1,97 @@
 export const MenuItems: IMenu[] = [
   {
     id: 1,
-    shortName: "VPA",
-    name: "",
+    shortName: "VPÁ",
+    name: "víděňské párky",
   },
   {
     id: 2,
     shortName: "KL",
-    name: "",
+    name: "klobása",
   },
   {
     id: 3,
     shortName: "VAJ",
-    name: "",
+    name: "vajíčka",
   },
   {
     id: 4,
     shortName: "TO",
-    name: "",
+    name: "toast",
   },
   {
     id: 5,
     shortName: "SEK",
-    name: "",
+    name: "sekaná",
   },
   {
     id: 6,
     shortName: "POL",
-    name: "",
+    name: "polévka",
   },
   {
     id: 7,
     shortName: "GUL",
-    name: "",
+    name: "gulášová",
   },
   {
     id: 8,
-    shortName: "CES",
-    name: "",
+    shortName: "ČES",
+    name: "česnečka",
   },
   {
     id: 9,
-    shortName: "VYV",
-    name: "",
+    shortName: "VÝV",
+    name: "vývar",
   },
   {
     id: 10,
     shortName: "LANG",
-    name: "",
+    name: "langoš",
   },
   {
     id: 11,
     shortName: "SMS",
-    name: "",
+    name: "smažený sýr",
   },
   {
     id: 12,
-    shortName: "KR",
-    name: "",
+    shortName: "KŘ",
+    name: "kuřecí řízek",
   },
   {
     id: 13,
     shortName: "BR",
-    name: "",
+    name: "bramboráček",
   },
   {
     id: 14,
     shortName: "UT",
-    name: "",
+    name: "utopenec",
   },
   {
     id: 15,
     shortName: "KN",
-    name: "",
+    name: "knedlíky",
   },
   {
     id: 16,
-    shortName: "VYP",
-    name: "",
+    shortName: "VÝP",
+    name: "výpečky",
   },
   {
     id: 17,
     shortName: "SPA",
-    name: "",
+    name: "spagety",
   },
   {
     id: 18,
     shortName: "KAT",
-    name: "",
+    name: "katův šleh",
   },
 ];
 
-interface IMenu {
+export interface IMenu {
   id: number;
   shortName: string;
   name: string;

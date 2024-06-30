@@ -5,12 +5,14 @@ import { use } from "react";
 import React, { useState, useEffect } from "react";
 import io, { Socket } from "socket.io-client";
 import { IItem } from "@/types/types";
+import ReactDOM from "react-dom";
+import Modal from "react-modal";
+import { IMenu, MenuItems } from "@/types/menu";
 
 export default function Home() {
-  const ordersRef = React.createRef();
+  const ordersRef = React.createRef<HTMLDivElement>();
   const [score, setScore] = useState(0);
-  const [messages, setMessages] = useState<string[]>([]);
-  const [newMessage, setNewMessage] = useState<string>("");
+  const [lastScore, setLastScore] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const [transport, setTransport] = useState("N/A");
   const [socket, setSocket] = useState<Socket>(io());
@@ -47,70 +49,55 @@ export default function Home() {
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
 
-    // Listen for incoming messages
-    socket.on("chat message1", (message: IItem) => {
-      console.log("chat message1");
-      setMessages((prevMessages) => [...prevMessages, message.number!]);
-      btnAdd(message);
-    });
-
-    socket.on("items_list", (message: IItem[]) => {
-      console.log(message);
-      let inprogressItems = document.getElementById("inprogress-items") as any;
-      let readyItems = document.getElementById("readyItems") as any;
-
-      inprogressItems.innerHTML = "";
-      readyItems.innerHTML = "";
-
-      message.forEach((item) => {
-        btnAdd(item);
-      });
-      // setMessages((prevMessages) => [...prevMessages, message]);
-      // btnAdd(message);
-    });
-
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
     };
   }, []);
 
+  socket.on("items_list", (message: IItem[]) => {
+    let inprogressItems = document.getElementById("inprogress-items") as any;
+    let readyItems = document.getElementById("readyItems") as any;
+
+    inprogressItems.innerHTML = "";
+    readyItems.innerHTML = "";
+
+    let lastIndex = 0;
+    message.forEach((item) => {
+      if (item.number! > lastIndex) {
+        lastIndex = item.number!;
+      }
+      setLastScore(lastIndex);
+      btnAdd(item);
+    });
+  });
+
   function btnAdd(val: IItem) {
     let inprogressItems = document.getElementById("inprogress-items") as any;
     let readyItems = document.getElementById("readyItems") as any;
     let newDiv = document.createElement("button") as any;
 
-    let newScore =
-      val !== null && !Number.isNaN(parseInt(val.number!))
-        ? parseInt(val.number!)
-        : score + 1;
+    let newScore = val !== null && val.number! ? val.number! : score + 1;
     setScore(newScore);
-    console.log(score);
 
     newDiv.id = newScore;
 
     newDiv.appendChild(document.createTextNode(newScore.toString()));
+    newDiv.appendChild(document.createElement("br"));
+    const sp1 = document.createElement("div");
+    sp1.innerText = val.name! + "-" + val.count!;
+    newDiv.appendChild(sp1);
+
+    const sp = document.createElement("div");
+    sp.innerText = val.comment ? val.comment! : " ";
+    newDiv.appendChild(sp);
     newDiv.onclick = () => {
       const item: IItem = {
         number: val.number,
         status: val.status === "New" ? "Ready" : "Done",
       };
       socket.emit("update_item", item);
-      // let inprogressItem = document.getElementById(newDiv.id) as any;
-      // inprogressItem.parentNode.removeChild(inprogressItem);
-      // let readyItemDiv = document.createElement("button");
-      // readyItemDiv.id = inprogressItem.id;
-      // readyItemDiv.appendChild(
-      //   document.createTextNode(inprogressItem.textContent)
-      // );
-      // Holidat.onclick = () => {
-      //   let deletDiv = document.getElementById(readyItemDiv.id) as any;
-      //   readyItems.removeChild(deletDiv);
-      // };
-      // readyItems.appendChild(readyItemDiv);
-      // console.log(inprogressItem);
     };
-    console.log(val);
     if (val.status === "New") {
       inprogressItems.appendChild(newDiv);
     } else if (val.status === "Ready") {

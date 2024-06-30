@@ -1,4 +1,7 @@
 export interface IItem {
-  number?: string | null;
+  number?: number;
   status?: string;
+  name?: string;
+  comment?: string;
+  count?: number;
 }

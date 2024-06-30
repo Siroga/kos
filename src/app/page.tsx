@@ -7,17 +7,19 @@ import io, { Socket } from "socket.io-client";
 import { IItem } from "@/types/types";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
-import { MenuItems } from "@/types/menu";
+import { IMenu, MenuItems } from "@/types/menu";
 
 export default function Home() {
-  const ordersRef = React.createRef();
+  const ordersRef = React.createRef<HTMLDivElement>();
   const [score, setScore] = useState(0);
-  const [messages, setMessages] = useState<string[]>([]);
-  const [newMessage, setNewMessage] = useState<string>("");
+  const [lastScore, setLastScore] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const [transport, setTransport] = useState("N/A");
   const [socket, setSocket] = useState<Socket>(io());
   const [modalIsOpen, setIsOpen] = React.useState(false);
+  const [count, setCount] = useState(1);
+  const [comment, setComment] = useState("");
+
   const customStyles = {
     content: {
       top: "50%",
@@ -27,12 +29,10 @@ export default function Home() {
       marginRight: "-50%",
       transform: "translate(-50%, -50%)",
       color: "#000",
-      "max-width": "720px",
+      maxWidth: "665px",
       // height: "100%",
     },
   };
-
-  const icons = [1, 2, 3, 4];
 
   //let socket: any;
 
@@ -66,53 +66,49 @@ export default function Home() {
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
 
-    // Listen for incoming messages
-    socket.on("chat message1", (message: IItem) => {
-      console.log("chat message1");
-      setMessages((prevMessages) => [...prevMessages, message.number!]);
-      btnAdd(message);
-    });
-
-    socket.on("items_list", (message: IItem[]) => {
-      console.log(message);
-      let inprogressItems = document.getElementById("inprogress-items") as any;
-      let readyItems = document.getElementById("readyItems") as any;
-
-      inprogressItems.innerHTML = "";
-      readyItems.innerHTML = "";
-
-      message.forEach((item) => {
-        btnAdd(item);
-      });
-      // setMessages((prevMessages) => [...prevMessages, message]);
-      // btnAdd(message);
-    });
-
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
     };
   }, []);
 
+  socket.on("items_list", (message: IItem[]) => {
+    let inprogressItems = document.getElementById("inprogress-items") as any;
+    let readyItems = document.getElementById("readyItems") as any;
+
+    inprogressItems.innerHTML = "";
+    readyItems.innerHTML = "";
+
+    let lastIndex = 0;
+    message.forEach((item) => {
+      if (item.number! > lastIndex) {
+        lastIndex = item.number!;
+      }
+      setLastScore(lastIndex);
+      btnAdd(item);
+    });
+  });
+
   function addNew() {
+    setCount(1);
+    setComment("");
+    setScore(lastScore + 1);
+
     setIsOpen(true);
-    let item: IItem = {};
-
-    // const newScore = score >= 200 ? 1 : score + 1;
-    // item.number = prompt("Zadejte číslo objednávky:", newScore.toString());
-    // if (item.number === null) return;
-    // item.status = "New";
-
-    // socket.emit("add_item", item);
-    // setNewMessage("");
   }
 
-  function sendMessage(mes: string) {
-    const val = prompt("Type here", (score + 1).toString());
-    if (val === null) return;
-
-    socket.emit("chat message", val);
-    setNewMessage("");
+  function addItem(menu: IMenu) {
+    let item: IItem = {};
+    const newScore = score >= 200 ? 1 : score;
+    item.number = newScore;
+    if (item.number === null) return;
+    item.name = menu.shortName;
+    item.count = count;
+    item.comment = comment;
+    item.status = "New";
+    socket.emit("add_item", item);
+    setLastScore(newScore);
+    setIsOpen(false);
   }
 
   function btnAdd(val: IItem) {
@@ -120,46 +116,32 @@ export default function Home() {
     let readyItems = document.getElementById("readyItems") as any;
     let newDiv = document.createElement("button") as any;
 
-    let newScore =
-      val !== null && !Number.isNaN(parseInt(val.number!))
-        ? parseInt(val.number!)
-        : score + 1;
+    let newScore = val !== null && val.number! ? val.number! : score + 1;
     setScore(newScore);
-    console.log(score);
 
     newDiv.id = newScore;
 
     newDiv.appendChild(document.createTextNode(newScore.toString()));
+    newDiv.appendChild(document.createElement("br"));
+    const sp1 = document.createElement("div");
+    sp1.innerText = val.name! + "-" + val.count!;
+    newDiv.appendChild(sp1);
+
+    const sp = document.createElement("div");
+    sp.innerText = val.comment ? val.comment! : " ";
+    newDiv.appendChild(sp);
     newDiv.onclick = () => {
       const item: IItem = {
         number: val.number,
         status: val.status === "New" ? "Ready" : "Done",
       };
       socket.emit("update_item", item);
-      // let inprogressItem = document.getElementById(newDiv.id) as any;
-      // inprogressItem.parentNode.removeChild(inprogressItem);
-      // let readyItemDiv = document.createElement("button");
-      // readyItemDiv.id = inprogressItem.id;
-      // readyItemDiv.appendChild(
-      //   document.createTextNode(inprogressItem.textContent)
-      // );
-      // Holidat.onclick = () => {
-      //   let deletDiv = document.getElementById(readyItemDiv.id) as any;
-      //   readyItems.removeChild(deletDiv);
-      // };
-      // readyItems.appendChild(readyItemDiv);
-      // console.log(inprogressItem);
     };
-    console.log(val);
     if (val.status === "New") {
       inprogressItems.appendChild(newDiv);
     } else if (val.status === "Ready") {
       readyItems.appendChild(newDiv);
     }
-  }
-
-  function openModal() {
-    setIsOpen(true);
   }
 
   function afterOpenModal() {
@@ -186,15 +168,58 @@ export default function Home() {
           <div className="menu-items">
             {MenuItems.map((item, i) => {
               // Return the element. Also pass key
-              return <button>{item.shortName}</button>;
+              return (
+                <button
+                  key={i}
+                  onClick={() => {
+                    addItem(item);
+                  }}
+                >
+                  {item.shortName} {/* <br /> <span>{item.name}</span> */}
+                </button>
+              );
             })}
           </div>
-          <div>
+          <div className="inline-inputs">
             <div>
-              count: <input type="number"></input>
+              Číslo:{" "}
+              <input
+                type="number"
+                value={score}
+                onChange={(e) => {
+                  setScore(
+                    parseInt(e.currentTarget.value) > 200 ||
+                      parseInt(e.currentTarget.value) < 1
+                      ? 1
+                      : parseInt(e.currentTarget.value)
+                  );
+                }}
+              ></input>
             </div>
             <div>
-              text: <input type="text"></input>
+              Množství:{" "}
+              <input
+                type="number"
+                value={count}
+                onChange={(e) => {
+                  const c = setCount(
+                    parseInt(e.currentTarget.value) < 1
+                      ? 1
+                      : parseInt(e.currentTarget.value)
+                  );
+                }}
+              ></input>
+            </div>
+            <div>
+              Poznámka:{" "}
+              <input
+                type="text"
+                className="poznamka"
+                value={comment}
+                onChange={(e) => {
+                  setComment(e.currentTarget.value);
+                }}
+              ></input>
             </div>
           </div>
         </div>
