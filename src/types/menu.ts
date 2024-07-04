@@ -170,12 +170,6 @@ export const PizzaItems: IMenu[] = [
     name: "Quattroformaggi",
     type: MenuTypeEnum.PIZZA,
   },
-  {
-    id: 9,
-    shortName: "test",
-    name: "test",
-    type: MenuTypeEnum.PIZZA,
-  },
 ];
 
 export interface IMenu {
