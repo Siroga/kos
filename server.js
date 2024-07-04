@@ -5,7 +5,7 @@ const { Server } = require("socket.io");
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
-const port = 80;
+const port = 8888;
 // when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
@@ -18,18 +18,22 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     console.log(socket.id);
-    console.log(items);
     socket.emit("items_list", items);
 
     // Handle chat messages
     socket.on("add_item", (message) => {
       items.push(message);
       io.emit("items_list", items); // Broadcast the message to all connected clients
+
+      items = items.map((item) => {
+        item.sound = false;
+        return item;
+      });
     });
 
     socket.on("update_item", (message) => {
       console.log("start");
-      if (message.status === "Ready") {
+      if (message.status === "Ready" || message.status === "Progress") {
         items.map((item) => {
           if (item.number === message.number) {
             item.status = message.status;

@@ -1,13 +1,13 @@
 "use client";
 import Image from "next/image";
-import styles from "./page.module.css";
+import styles from "./page.module.sass";
 import { use } from "react";
 import React, { useState, useEffect } from "react";
 import io, { Socket } from "socket.io-client";
 import { IItem } from "@/types/types";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
-import { IMenu, MenuItems } from "@/types/menu";
+import { IMenu, MenuItems, MenuTypeEnum } from "@/types/menu";
 
 export default function Home() {
   const ordersRef = React.createRef<HTMLDivElement>();
@@ -85,12 +85,13 @@ export default function Home() {
     newDiv.appendChild(document.createTextNode(newScore.toString()));
     newDiv.appendChild(document.createElement("br"));
     const sp1 = document.createElement("div");
-    sp1.innerText = val.name! + "-" + val.count!;
+    sp1.innerText =
+      val.type === MenuTypeEnum.PIZZA ? "PIZZA" : val.name! + "-" + val.count!;
     newDiv.appendChild(sp1);
 
-    const sp = document.createElement("div");
-    sp.innerText = val.comment ? val.comment! : " ";
-    newDiv.appendChild(sp);
+    // const sp = document.createElement("div");
+    // sp.innerText = ""; //val.comment ? val.comment! : " ";
+    // newDiv.appendChild(sp);
     newDiv.onclick = () => {
       const item: IItem = {
         number: val.number,
@@ -98,7 +99,7 @@ export default function Home() {
       };
       socket.emit("update_item", item);
     };
-    if (val.status === "New") {
+    if (val.status === "New" || val.status === "Progress") {
       inprogressItems.appendChild(newDiv);
     } else if (val.status === "Ready") {
       readyItems.appendChild(newDiv);

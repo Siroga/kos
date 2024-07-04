@@ -1,13 +1,14 @@
 "use client";
 import Image from "next/image";
-import styles from "./page.module.css";
+import styles from "./pizza.module.scss";
 import { use } from "react";
 import React, { useState, useEffect } from "react";
 import io, { Socket } from "socket.io-client";
 import { IItem } from "@/types/types";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
-import { IMenu, MenuItems, MenuTypeEnum } from "@/types/menu";
+import { IMenu, MenuTypeEnum, PizzaItems } from "@/types/menu";
+import { socket } from "@/app/lib/socket";
 
 export default function Home() {
   const ordersRef = React.createRef<HTMLDivElement>();
@@ -15,7 +16,7 @@ export default function Home() {
   const [lastScore, setLastScore] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const [transport, setTransport] = useState("N/A");
-  const [socket, setSocket] = useState<Socket>(io());
+  // const [socket, setSocket] = useState<Socket>(io());
   const [modalIsOpen, setIsOpen] = React.useState(false);
   const [count, setCount] = useState(1);
   const [comment, setComment] = useState("");
@@ -38,7 +39,6 @@ export default function Home() {
 
   useEffect(() => {
     console.log("useEffect");
-    // setSocket(io());
 
     if (socket.connected) {
       onConnect();
@@ -49,12 +49,6 @@ export default function Home() {
       setIsConnected(true);
       setTransport(socket.io.engine.transport.name);
       console.log(socket.io.engine.transport.name);
-
-      socket.io.engine.on("upgrade", (transport: any) => {
-        console.log("upgrade");
-        setTransport(transport.name);
-        console.log(transport.name);
-      });
     }
 
     function onDisconnect() {
@@ -63,33 +57,51 @@ export default function Home() {
       setTransport("N/A");
     }
 
-    socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+
+    socket.on("items_list", (message: IItem[]) => {
+      onItemsList(message);
+    });
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off("items_list", onItemsList);
     };
   }, []);
 
-  socket.on("items_list", (message: IItem[]) => {
+  function onItemsList(message: IItem[]) {
+    console.log(message);
     let inprogressItems = document.getElementById("inprogress-items") as any;
     let readyItems = document.getElementById("readyItems") as any;
+    let newItems = document.getElementById("new-items") as any;
 
     inprogressItems.innerHTML = "";
     readyItems.innerHTML = "";
+    newItems.innerHTML = "";
 
     let lastIndex = 0;
+
     message.forEach((item) => {
       if (item.number! > lastIndex) {
         lastIndex = item.number!;
       }
       setLastScore(lastIndex);
-      if (item.type === MenuTypeEnum.KITCHEN) {
+      if (item.type === MenuTypeEnum.PIZZA) {
         btnAdd(item);
+        if (item.status === "New" && item.sound) {
+          playSound();
+        }
       }
     });
-  });
+  }
+
+  function playSound() {
+    try {
+      const audio = new Audio("/sound.wav");
+      audio.play();
+    } catch (e) {}
+  }
 
   function addNew() {
     setCount(1);
@@ -107,14 +119,16 @@ export default function Home() {
     item.name = menu.shortName;
     item.count = count;
     item.comment = comment;
-    item.type = MenuTypeEnum.KITCHEN;
     item.status = "New";
+    item.sound = true;
+    item.type = menu.type;
     socket.emit("add_item", item);
     setLastScore(newScore);
     setIsOpen(false);
   }
 
   function btnAdd(val: IItem) {
+    let newItems = document.getElementById("new-items") as any;
     let inprogressItems = document.getElementById("inprogress-items") as any;
     let readyItems = document.getElementById("readyItems") as any;
     let newDiv = document.createElement("button") as any;
@@ -127,7 +141,7 @@ export default function Home() {
     newDiv.appendChild(document.createTextNode(newScore.toString()));
     newDiv.appendChild(document.createElement("br"));
     const sp1 = document.createElement("div");
-    sp1.innerText = val.name! + "-" + val.count!;
+    sp1.innerText = val.name!;
     newDiv.appendChild(sp1);
 
     const sp = document.createElement("div");
@@ -136,14 +150,22 @@ export default function Home() {
     newDiv.onclick = () => {
       const item: IItem = {
         number: val.number,
-        status: val.status === "New" ? "Ready" : "Done",
+        type: val.type,
+        status:
+          val.status === "New"
+            ? "Progress"
+            : val.status === "Progress"
+            ? "Ready"
+            : "Done",
       };
       socket.emit("update_item", item);
     };
     if (val.status === "New") {
-      inprogressItems.appendChild(newDiv);
+      newItems.appendChild(newDiv);
     } else if (val.status === "Ready") {
       readyItems.appendChild(newDiv);
+    } else if (val.status === "Progress") {
+      inprogressItems.appendChild(newDiv);
     }
   }
 
@@ -169,8 +191,8 @@ export default function Home() {
         ariaHideApp={false}
       >
         <div>
-          <div className="menu-items">
-            {MenuItems.map((item, i) => {
+          <div className={`menu-items ${styles.menuItems}`}>
+            {PizzaItems.map((item, i) => {
               // Return the element. Also pass key
               return (
                 <button
@@ -200,7 +222,7 @@ export default function Home() {
                 }}
               ></input>
             </div>
-            <div>
+            {/* <div>
               Množství:{" "}
               <input
                 type="number"
@@ -213,7 +235,7 @@ export default function Home() {
                   );
                 }}
               ></input>
-            </div>
+            </div> */}
             <div>
               Poznámka:{" "}
               <input
@@ -232,15 +254,23 @@ export default function Home() {
         <a href="/">Kuchyně</a>
         <a href="/pizza">Pizza</a>
       </div>
-      <div className="main" ref={ordersRef}>
-        <div className="orderProgress">
-          <h1>Objednávka zahájena</h1>
-          <div className="inprogress-items" id="inprogress-items" />
+      <div className={`main ${styles.mainPizza}`} ref={ordersRef}>
+        <div className={`${styles.orderNew}`}>
+          <h1>Nová objednávka</h1>
+          <div className={styles.newItems} id="new-items" />
         </div>
-        <div className="pageDivider" />
-        <div className="orderCompleted">
+        <div className={`pageDivider ${styles.pageLeftDivider}`} />
+        <div className={`orderProgress ${styles.orderProgress}`}>
+          <h1>Objednávka se připravuje</h1>
+          <div
+            className={`inprogress-items ${styles.inprogressItems}`}
+            id="inprogress-items"
+          />
+        </div>
+        <div className={`pageDivider ${styles.pageRightDivider}`} />
+        <div className={`orderCompleted ${styles.orderCompleted}`}>
           <h1>Objednávka je připravena</h1>
-          <div className="ready-items" id="readyItems" />
+          <div className={`ready-items ${styles.readyItems}`} id="readyItems" />
         </div>
       </div>
     </div>
