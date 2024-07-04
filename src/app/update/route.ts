@@ -1,20 +1,6 @@
 import { exec } from "child_process";
 import { NextResponse } from "next/server";
 
-// To handle a GET request to /api
-export async function GET(request: any) {
-  try {
-    await runWebhook();
-    return NextResponse.json({ message: "Success" });
-  } catch (error) {
-    console.error("Error executing webhook:", error);
-    return NextResponse.json({ message: "Internal Server Error" });
-  }
-
-  // Do whatever you want
-  return NextResponse.json({ message: "Hello World" }, { status: 200 });
-}
-
 const runWebhook = async () => {
   return new Promise((resolve, reject) => {
     exec(
@@ -32,3 +18,13 @@ const runWebhook = async () => {
     );
   });
 };
+// To handle a GET request to /api
+export async function GET(request: any) {
+  try {
+    await runWebhook();
+    return NextResponse.redirect("/");
+  } catch (error) {
+    console.error("Error executing webhook:", error);
+    return NextResponse.redirect("/");
+  }
+}
