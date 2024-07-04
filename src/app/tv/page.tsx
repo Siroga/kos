@@ -110,7 +110,7 @@ export default function Home() {
     <div>
       <div className="main" ref={ordersRef}>
         <div className="orderProgress">
-          <h1>Objednávka zahájena TV</h1>
+          <h1>Objednávka zahájena</h1>
           <div className="inprogress-items" id="inprogress-items" />
         </div>
         <div className="pageDivider" />
