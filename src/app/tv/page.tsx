@@ -84,7 +84,10 @@ export default function Home() {
 
     newDiv.appendChild(document.createTextNode(newScore.toString()));
     newDiv.appendChild(document.createElement("br"));
+
     const sp1 = document.createElement("div");
+
+    newDiv.className = val.type === MenuTypeEnum.PIZZA ? "yellow" : "red";
     sp1.innerText =
       val.type === MenuTypeEnum.PIZZA ? "PIZZA" : val.name! + "-" + val.count!;
     newDiv.appendChild(sp1);
