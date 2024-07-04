@@ -87,9 +87,19 @@ export default function Home() {
       setLastScore(lastIndex);
       if (item.type === MenuTypeEnum.KITCHEN) {
         btnAdd(item);
+        if (item.status === "New" && item.sound) {
+          playSound();
+        }
       }
     });
   });
+
+  function playSound() {
+    try {
+      const audio = new Audio("/sound.wav");
+      audio.play();
+    } catch (e) {}
+  }
 
   function addNew() {
     setCount(1);
@@ -107,6 +117,7 @@ export default function Home() {
     item.name = menu.shortName;
     item.count = count;
     item.comment = comment;
+    item.sound = true;
     item.type = MenuTypeEnum.KITCHEN;
     item.status = "New";
     socket.emit("add_item", item);
