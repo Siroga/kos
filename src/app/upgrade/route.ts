@@ -1,4 +1,5 @@
 import { exec } from "child_process";
+import { NextApiRequest, NextApiResponse } from "next";
 import { NextResponse } from "next/server";
 
 const runWebhook = async () => {
@@ -19,12 +20,12 @@ const runWebhook = async () => {
   });
 };
 // To handle a GET request to /api
-export async function GET(request: any) {
+export async function POST(req: NextApiRequest, res: NextApiResponse) {
   try {
     await runWebhook();
-    return NextResponse.redirect("/");
+    return NextResponse.json({ message: "Success" });
   } catch (error) {
     console.error("Error executing webhook:", error);
-    return NextResponse.redirect("/");
+    return NextResponse.json({ message: "Error" });
   }
 }
