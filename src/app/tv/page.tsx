@@ -4,7 +4,7 @@ import styles from "./page.module.sass";
 import { use } from "react";
 import React, { useState, useEffect } from "react";
 import io, { Socket } from "socket.io-client";
-import { IItem } from "@/types/types";
+import { IItem, IItemsList } from "@/types/types";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
 import { IMenu, MenuItems, MenuTypeEnum } from "@/types/menu";
@@ -55,7 +55,7 @@ export default function Home() {
     };
   }, []);
 
-  socket.on("items_list", (message: IItem[]) => {
+  socket.on("items_list", (message: IItemsList) => {
     let inprogressItems = document.getElementById("inprogress-items") as any;
     let readyItems = document.getElementById("readyItems") as any;
 
@@ -63,7 +63,7 @@ export default function Home() {
     readyItems.innerHTML = "";
 
     let lastIndex = 0;
-    message.forEach((item) => {
+    message.items.forEach((item) => {
       if (item.number! > lastIndex) {
         lastIndex = item.number!;
       }
@@ -92,9 +92,9 @@ export default function Home() {
       val.type === MenuTypeEnum.PIZZA ? "PIZZA" : val.name! + "-" + val.count!;
     newDiv.appendChild(sp1);
 
-    // const sp = document.createElement("div");
-    // sp.innerText = ""; //val.comment ? val.comment! : " ";
-    // newDiv.appendChild(sp);
+    const sp = document.createElement("div");
+    sp.innerText = val.name!; //val.comment ? val.comment! : " ";
+    newDiv.appendChild(sp);
     newDiv.onclick = () => {
       const item: IItem = {
         number: val.number,

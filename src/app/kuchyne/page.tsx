@@ -43,7 +43,7 @@ export default function Home() {
 
   function onItemsList(items: IItemsList) {
     console.log("get data");
-    addItemsToPage(items.items, MenuTypeEnum.PIZZA);
+    addItemsToPage(items.items, MenuTypeEnum.KITCHEN);
   }
 
   return (

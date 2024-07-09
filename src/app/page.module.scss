@@ -1,0 +1,41 @@
+.mainBlock {
+  width: 50%;
+  height: 100%;
+  margin: 0 auto;
+  padding-top: 50px;
+  a {
+    text-decoration: none;
+    cursor: hand;
+  }
+
+  a:link {
+    color: rgb(13, 42, 62);
+  }
+
+  /* visited link */
+  a:visited {
+    color: rgb(13, 42, 62);
+  }
+
+  /* mouse over link */
+  a:hover {
+    color: rgb(13, 42, 62);
+  }
+
+  /* selected link */
+  a:active {
+    color: rgb(13, 42, 62);
+  }
+
+  .menuItem {
+    background-color: rgb(248, 217, 137);
+    height: 100px;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-top: 60px;
+
+    span {
+      font-size: 30px;
+    }
+  }
+}

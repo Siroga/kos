@@ -1,4 +1,3 @@
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
-console.log(`initialize socket`);
-export const socket = io();
+export const socket: Socket = io();

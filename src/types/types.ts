@@ -9,3 +9,8 @@ export interface IItem {
   type?: MenuTypeEnum;
   sound?: boolean;
 }
+
+export interface IItemsList {
+  items: IItem[];
+  lastIndex: number;
+}

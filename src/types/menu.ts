@@ -8,6 +8,7 @@ export interface IMenu {
 export enum MenuTypeEnum {
   KITCHEN,
   PIZZA,
+  ALL,
 }
 
 export const MenuItems: IMenu[] = [

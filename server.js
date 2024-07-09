@@ -10,6 +10,7 @@ const port = 8888;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 let items = [];
+let lastIndex = 0;
 
 app.prepare().then(() => {
   const httpServer = createServer(handler);
@@ -18,12 +19,20 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     console.log(socket.id);
-    socket.emit("items_list", items);
 
+    setTimeout(() => {
+      socket.emit("items_list", { items: items, lastIndex: lastIndex });
+    }, 100);
+
+    socket.on("connect", (message) => {
+      console.log("connect");
+    });
     // Handle chat messages
     socket.on("add_item", (message) => {
+      lastIndex = message.number;
       items.push(message);
-      io.emit("items_list", items); // Broadcast the message to all connected clients
+
+      io.emit("items_list", { items: items, lastIndex: lastIndex }); // Broadcast the message to all connected clients
 
       items = items.map((item) => {
         item.sound = false;
@@ -48,7 +57,7 @@ app.prepare().then(() => {
       }
 
       console.log("done");
-      io.emit("items_list", items); // Broadcast the message to all connected clients
+      io.emit("items_list", { items: items, lastIndex: lastIndex }); // Broadcast the message to all connected clients
     });
 
     socket.on("disconnect", () => {
