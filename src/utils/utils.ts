@@ -126,32 +126,12 @@ export const btnAddPok = (val: IItem, isTv: boolean = false) => {
     const item: IItem = {
       number: val.number,
       type: val.type,
-      status:
-        val.status === "New"
-          ? "Progress"
-          : val.status === "Progress"
-          ? "Ready"
-          : "Done",
+      status: "Done",
     };
     socket.emit("update_item", item);
   };
 
   newItems.appendChild(newDiv);
-  //   if (isTv) {
-  //     if (val.status === "Ready") {
-  //       readyItems.appendChild(newDiv);
-  //     } else if (val.status === "Progress" || val.status === "New") {
-  //       inprogressItems.appendChild(newDiv);
-  //     }
-  //   } else {
-  //     if (val.status === "New") {
-  //       newItems.appendChild(newDiv);
-  //     } else if (val.status === "Ready") {
-  //       readyItems.appendChild(newDiv);
-  //     } else if (val.status === "Progress") {
-  //       inprogressItems.appendChild(newDiv);
-  //     }
-  //   }
 
   return newScore;
 };
@@ -167,7 +147,7 @@ export const addItemsToPagePok = (
 
   let lastIndex = 0;
 
-  items.forEach((item) => {
+  items.reverse().forEach((item) => {
     if (item.number! > lastIndex) {
       lastIndex = item.number!;
     }
