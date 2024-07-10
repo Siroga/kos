@@ -9,7 +9,7 @@ import ReactDOM from "react-dom";
 import Modal from "react-modal";
 import { IMenu, MenuItems, MenuTypeEnum, PizzaItems } from "@/types/menu";
 import { socket } from "@/app/lib/socket";
-import { addItemsToPage, addItemsToPagePok } from "@/utils/utils";
+import { addItemsToPage } from "@/utils/utils";
 
 export default function Home() {
   const ordersRef = React.createRef<HTMLDivElement>();
@@ -73,7 +73,7 @@ export default function Home() {
     setLastScore(() => {
       return items.lastIndex;
     });
-    return addItemsToPagePok(items.items, MenuTypeEnum.ALL, false);
+    return addItemsToPage(items.items, MenuTypeEnum.ALL, false);
   }
 
   function addNew() {
@@ -209,10 +209,20 @@ export default function Home() {
           </div>
         </div>
       </Modal>
-      <div className={`main ${styles.pok}`} ref={ordersRef}>
-        <div className={`orderNew orderNewPok`}>
+      <div className={`main`} ref={ordersRef}>
+        <div className={`orderNew`}>
           <h1>Nová objednávka</h1>
-          <div className={`items newItems newItemsPok`} id="new-items" />
+          <div className={`items newItems`} id="new-items" />
+        </div>
+        <div className={`pageDivider pageLeftDivider`} />
+        <div className={`orderProgress`}>
+          <h1>Objednávka se připravuje</h1>
+          <div className={`items inprogressItems`} id="inprogress-items" />
+        </div>
+        <div className={`pageDivider pageRightDivider`} />
+        <div className={`orderCompleted`}>
+          <h1>Objednávka je připravena</h1>
+          <div className={`items readyItems`} id="readyItems" />
         </div>
       </div>
     </div>

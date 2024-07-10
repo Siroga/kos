@@ -187,12 +187,3 @@ h1 {
     grid-row: auto;
   }
 }
-
-.orderNewPok {
-  grid-column: 1 / 10 !important;
-  grid-row: auto !important;
-}
-
-.newItemsPok {
-  grid-template-columns: repeat(10, 1fr) !important;
-}
