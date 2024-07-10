@@ -120,6 +120,24 @@ export const MenuItems: IMenu[] = [
     name: "katův šleh",
     type: MenuTypeEnum.KITCHEN,
   },
+  {
+    id: 19,
+    shortName: "RIZ",
+    name: "Rizoto",
+    type: MenuTypeEnum.KITCHEN,
+  },
+  {
+    id: 20,
+    shortName: "SAL",
+    name: "Salát",
+    type: MenuTypeEnum.KITCHEN,
+  },
+  {
+    id: 21,
+    shortName: "UZK",
+    name: "Knedliky",
+    type: MenuTypeEnum.KITCHEN,
+  },
 ];
 
 export const PizzaItems: IMenu[] = [
