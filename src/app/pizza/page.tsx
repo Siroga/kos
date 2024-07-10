@@ -48,23 +48,20 @@ export default function Home() {
 
   return (
     <div>
-      <div className={`main ${styles.mainPizza}`} ref={ordersRef}>
-        <div className={`${styles.orderNew}`}>
+      <div className={`main `} ref={ordersRef}>
+        <div className={`orderNew`}>
           <h1>Nová objednávka</h1>
-          <div className={styles.newItems} id="new-items" />
+          <div className={`items newItems`} id="new-items" />
         </div>
-        <div className={`pageDivider ${styles.pageLeftDivider}`} />
-        <div className={`orderProgress ${styles.orderProgress}`}>
+        <div className={`pageDivider pageLeftDivider`} />
+        <div className={`orderProgress`}>
           <h1>Objednávka se připravuje</h1>
-          <div
-            className={`inprogress-items ${styles.inprogressItems}`}
-            id="inprogress-items"
-          />
+          <div className={`items inprogressItems`} id="inprogress-items" />
         </div>
-        <div className={`pageDivider ${styles.pageRightDivider}`} />
-        <div className={`orderCompleted ${styles.orderCompleted}`}>
+        <div className={`pageDivider pageRightDivider`} />
+        <div className={`orderCompleted`}>
           <h1>Objednávka je připravena</h1>
-          <div className={`ready-items ${styles.readyItems}`} id="readyItems" />
+          <div className={`items readyItems`} id="readyItems" />
         </div>
       </div>
     </div>

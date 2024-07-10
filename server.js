@@ -22,7 +22,7 @@ app.prepare().then(() => {
 
     setTimeout(() => {
       socket.emit("items_list", { items: items, lastIndex: lastIndex });
-    }, 100);
+    }, 500);
 
     socket.on("connect", (message) => {
       console.log("connect");

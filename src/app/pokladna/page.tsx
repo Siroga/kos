@@ -73,7 +73,7 @@ export default function Home() {
     setLastScore(() => {
       return items.lastIndex;
     });
-    return addItemsToPage(items.items, MenuTypeEnum.ALL);
+    return addItemsToPage(items.items, MenuTypeEnum.ALL, false);
   }
 
   function addNew() {
@@ -110,7 +110,7 @@ export default function Home() {
 
   return (
     <div>
-      <button className="new-button" type="submit" onClick={addNew}>
+      <button className={styles.newButton} type="submit" onClick={addNew}>
         +
       </button>
       <Modal
@@ -121,11 +121,9 @@ export default function Home() {
         contentLabel="Example Modal"
         ariaHideApp={false}
       >
-        <div>
-          <div className="flex">
-            <div
-              className={`menu-items ${styles.menuItems} ${styles.kitcnenItems}`}
-            >
+        <div className={styles.modal}>
+          <div className={styles.flex}>
+            <div className={`${styles.menuItems} ${styles.kitcnenItems}`}>
               {MenuItems.map((item, i) => {
                 // Return the element. Also pass key
                 return (
@@ -140,7 +138,7 @@ export default function Home() {
                 );
               })}
             </div>
-            <div className={`menu-items ${styles.menuItems}`}>
+            <div className={`${styles.menuItems}`}>
               {PizzaItems.map((item, i) => {
                 // Return the element. Also pass key
                 return (
@@ -156,7 +154,7 @@ export default function Home() {
               })}
             </div>
           </div>
-          <div className="inline-inputs">
+          <div className={styles.inlineInputs}>
             <div>
               Číslo:{" "}
               <input
@@ -201,7 +199,7 @@ export default function Home() {
               Poznámka:{" "}
               <input
                 type="text"
-                className="poznamka"
+                className={styles.poznamka}
                 value={comment}
                 onChange={(e) => {
                   setComment(e.currentTarget.value);
@@ -211,23 +209,20 @@ export default function Home() {
           </div>
         </div>
       </Modal>
-      <div className={`main ${styles.mainPizza}`} ref={ordersRef}>
-        <div className={`${styles.orderNew}`}>
+      <div className={`main`} ref={ordersRef}>
+        <div className={`orderNew`}>
           <h1>Nová objednávka</h1>
-          <div className={styles.newItems} id="new-items" />
+          <div className={`items newItems`} id="new-items" />
         </div>
-        <div className={`pageDivider ${styles.pageLeftDivider}`} />
-        <div className={`orderProgress ${styles.orderProgress}`}>
+        <div className={`pageDivider pageLeftDivider`} />
+        <div className={`orderProgress`}>
           <h1>Objednávka se připravuje</h1>
-          <div
-            className={`inprogress-items ${styles.inprogressItems}`}
-            id="inprogress-items"
-          />
+          <div className={`items inprogressItems`} id="inprogress-items" />
         </div>
-        <div className={`pageDivider ${styles.pageRightDivider}`} />
-        <div className={`orderCompleted ${styles.orderCompleted}`}>
+        <div className={`pageDivider pageRightDivider`} />
+        <div className={`orderCompleted`}>
           <h1>Objednávka je připravena</h1>
-          <div className={`ready-items ${styles.readyItems}`} id="readyItems" />
+          <div className={`items readyItems`} id="readyItems" />
         </div>
       </div>
     </div>

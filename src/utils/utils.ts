@@ -2,14 +2,22 @@ import { socket } from "@/app/lib/socket";
 import { MenuTypeEnum } from "@/types/menu";
 import { IItem } from "@/types/types";
 
-export const addItemsToPage = (items: IItem[], type: MenuTypeEnum): number => {
+export const addItemsToPage = (
+  items: IItem[],
+  type: MenuTypeEnum,
+  sound: boolean = true,
+  isTv = false
+): number => {
   let inprogressItems = document.getElementById("inprogress-items") as any;
   let readyItems = document.getElementById("readyItems") as any;
-  let newItems = document.getElementById("new-items") as any;
 
   inprogressItems.innerHTML = "";
   readyItems.innerHTML = "";
-  newItems.innerHTML = "";
+
+  if (!isTv) {
+    let newItems = document.getElementById("new-items") as any;
+    newItems.innerHTML = "";
+  }
 
   let lastIndex = 0;
 
@@ -19,8 +27,8 @@ export const addItemsToPage = (items: IItem[], type: MenuTypeEnum): number => {
     }
 
     if (type === item.type || type === MenuTypeEnum.ALL) {
-      btnAdd(item);
-      if (item.status === "New" && item.sound) {
+      btnAdd(item, isTv);
+      if (item.status === "New" && item.sound && sound) {
         playSound();
       }
     }
@@ -28,11 +36,14 @@ export const addItemsToPage = (items: IItem[], type: MenuTypeEnum): number => {
   return lastIndex;
 };
 
-export const btnAdd = (val: IItem, score: number = 1) => {
-  let newItems = document.getElementById("new-items") as any;
+export const btnAdd = (val: IItem, isTv: boolean = false) => {
   let inprogressItems = document.getElementById("inprogress-items") as any;
   let readyItems = document.getElementById("readyItems") as any;
+  let newItems = document.getElementById("new-items") as any;
+
   let newDiv = document.createElement("button") as any;
+
+  newDiv.className = val.type === MenuTypeEnum.KITCHEN ? "red" : "yellow";
 
   let newScore = val !== null && val.number! ? val.number! : 1;
 
@@ -47,6 +58,7 @@ export const btnAdd = (val: IItem, score: number = 1) => {
 
   const sp = document.createElement("div");
   sp.innerText = val.comment ? val.comment! : " ";
+  sp.className = "comment";
   newDiv.appendChild(sp);
   newDiv.onclick = () => {
     const item: IItem = {
@@ -61,12 +73,21 @@ export const btnAdd = (val: IItem, score: number = 1) => {
     };
     socket.emit("update_item", item);
   };
-  if (val.status === "New") {
-    newItems.appendChild(newDiv);
-  } else if (val.status === "Ready") {
-    readyItems.appendChild(newDiv);
-  } else if (val.status === "Progress") {
-    inprogressItems.appendChild(newDiv);
+
+  if (isTv) {
+    if (val.status === "Ready") {
+      readyItems.appendChild(newDiv);
+    } else if (val.status === "Progress" || val.status === "New") {
+      inprogressItems.appendChild(newDiv);
+    }
+  } else {
+    if (val.status === "New") {
+      newItems.appendChild(newDiv);
+    } else if (val.status === "Ready") {
+      readyItems.appendChild(newDiv);
+    } else if (val.status === "Progress") {
+      inprogressItems.appendChild(newDiv);
+    }
   }
 
   return newScore;
