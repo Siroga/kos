@@ -31,7 +31,7 @@ export default function Home() {
       marginRight: "-50%",
       transform: "translate(-50%, -50%)",
       color: "#000",
-      maxWidth: "865px",
+      maxWidth: "900px",
       maxHeight: "90hv",
       width: "90%",
     },
