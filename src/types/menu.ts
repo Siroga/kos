@@ -14,6 +14,12 @@ export enum MenuTypeEnum {
 export const MenuItems: IMenu[] = [
   {
     id: 1,
+    shortName: "HR",
+    name: "hranolky",
+    type: MenuTypeEnum.KITCHEN,
+  },
+  {
+    id: 1,
     shortName: "VPÁ",
     name: "víděňské párky",
     type: MenuTypeEnum.KITCHEN,
