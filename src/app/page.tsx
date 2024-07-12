@@ -1,8 +1,11 @@
 "use client";
+import { logIn } from "@/utils/utils";
 import styles from "./page.module.scss";
 import React, { useState, useEffect } from "react";
 
 export default function Home() {
+  logIn();
+
   return (
     <div className={styles.mainBlock}>
       <a href="/pokladna">

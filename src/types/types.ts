@@ -1,6 +1,7 @@
 import { MenuTypeEnum } from "./menu";
 
 export interface IItem {
+  id?: number;
   number?: number;
   status?: string;
   name?: string;

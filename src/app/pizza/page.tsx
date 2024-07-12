@@ -3,12 +3,14 @@ import styles from "./page.module.scss";
 import React, { useState, useEffect } from "react";
 import { IItem, IItemsList } from "@/types/types";
 import { socket } from "@/app/lib/socket";
-import { addItemsToPage } from "@/utils/utils";
+import { addItemsToPage, logIn } from "@/utils/utils";
 import { MenuTypeEnum } from "@/types/menu";
 
 export default function Home() {
   const ordersRef = React.createRef<HTMLDivElement>();
   const [isConnected, setIsConnected] = useState(false);
+
+  logIn();
 
   useEffect(() => {
     console.log("useEffect");
@@ -48,7 +50,7 @@ export default function Home() {
 
   return (
     <div>
-      <div className={`main `} ref={ordersRef}>
+      <div className={`main ${styles.pizza}`} ref={ordersRef}>
         <div className={`orderNew`}>
           <h1>Nová objednávka</h1>
           <div className={`items newItems`} id="new-items" />

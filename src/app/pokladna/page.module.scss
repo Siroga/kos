@@ -27,6 +27,13 @@
         width: 100px;
       }
     }
+
+    &.pizzaItems {
+      width: 200px;
+      button {
+        text-align: left;
+      }
+    }
   }
 
   .inlineInputs {
@@ -56,14 +63,17 @@
 .newButton {
   background-color: rgb(25, 123, 41);
   text-align: center;
-  font-size: 20px;
+  font-size: 26px;
   font-weight: bold;
   color: azure;
   padding: 1.2em;
   position: absolute;
-  height: 30px;
+  height: 60px;
+  width: 150px;
   padding-top: 0.5em;
   padding-bottom: 1.6em;
+  left: 20px;
+  top: 20px;
 }
 
 .pok {
@@ -71,4 +81,13 @@
   grid-template-columns: repeat(9, 1fr);
   grid-template-rows: 100px 100px;
   width: 100%;
+
+  button {
+    div {
+      font-size: 16px !important;
+      font-weight: normal !important;
+      height: auto !important;
+      overflow: auto !important;
+    }
+  }
 }

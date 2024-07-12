@@ -9,7 +9,7 @@ import ReactDOM from "react-dom";
 import Modal from "react-modal";
 import { IMenu, MenuItems, MenuTypeEnum, PizzaItems } from "@/types/menu";
 import { socket } from "@/app/lib/socket";
-import { addItemsToPage, addItemsToPagePok } from "@/utils/utils";
+import { addItemsToPage, addItemsToPagePok, logIn } from "@/utils/utils";
 
 export default function Home() {
   const ordersRef = React.createRef<HTMLDivElement>();
@@ -21,6 +21,8 @@ export default function Home() {
   const [modalIsOpen, setIsOpen] = React.useState(false);
   const [count, setCount] = useState(1);
   const [comment, setComment] = useState("");
+
+  logIn();
 
   const customStyles = {
     content: {
@@ -89,6 +91,7 @@ export default function Home() {
     const newScore = score > 200 ? 1 : score;
     item.number = newScore;
     if (item.number === null) return;
+    item.id = menu.id;
     item.name = menu.shortName;
     item.count = count;
     item.comment = comment;
@@ -138,7 +141,7 @@ export default function Home() {
                 );
               })}
             </div>
-            <div className={`${styles.menuItems}`}>
+            <div className={`${styles.menuItems} ${styles.pizzaItems}`}>
               {PizzaItems.map((item, i) => {
                 // Return the element. Also pass key
                 return (
@@ -148,7 +151,8 @@ export default function Home() {
                       addItem(item);
                     }}
                   >
-                    {item.shortName} {/* <br /> <span>{item.name}</span> */}
+                    {item.id} {item.shortName}{" "}
+                    {/* <br /> <span>{item.name}</span> */}
                   </button>
                 );
               })}

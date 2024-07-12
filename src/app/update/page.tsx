@@ -8,6 +8,7 @@ import { IItem } from "@/types/types";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
 import { IMenu, MenuItems, MenuTypeEnum } from "@/types/menu";
+import { logIn } from "@/utils/utils";
 
 export default function Home() {
   const ordersRef = React.createRef<HTMLDivElement>();
@@ -16,6 +17,8 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [transport, setTransport] = useState("N/A");
   const [socket, setSocket] = useState<Socket>(io());
+
+  logIn();
 
   function handleUpdate(event: React.FormEvent) {
     event.preventDefault();

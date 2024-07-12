@@ -52,7 +52,14 @@ export const btnAdd = (val: IItem, isTv: boolean = false) => {
   newDiv.appendChild(document.createTextNode(newScore.toString()));
   newDiv.appendChild(document.createElement("br"));
   const sp1 = document.createElement("div");
-  sp1.innerText = val.count! > 1 ? val.name! + "-" + val.count! : val.name!;
+  if (val.type === MenuTypeEnum.KITCHEN || isTv) {
+    sp1.innerText = val.count! > 1 ? val.name! + "-" + val.count! : val.name!;
+  } else {
+    sp1.innerText =
+      val.count! > 1
+        ? val.id! + "." + val.name! + "-" + val.count!
+        : val.id! + "." + val.name!;
+  }
 
   newDiv.appendChild(sp1);
 
@@ -114,7 +121,15 @@ export const btnAddPok = (val: IItem, isTv: boolean = false) => {
   newDiv.appendChild(document.createTextNode(newScore.toString()));
   newDiv.appendChild(document.createElement("br"));
   const sp1 = document.createElement("div");
-  sp1.innerText = val.count! > 1 ? val.name! + "-" + val.count! : val.name!;
+
+  if (val.type === MenuTypeEnum.KITCHEN) {
+    sp1.innerText = val.count! > 1 ? val.name! + "-" + val.count! : val.name!;
+  } else {
+    sp1.innerText =
+      val.count! > 1
+        ? val.id! + "." + val.name! + "-" + val.count!
+        : val.id! + "." + val.name!;
+  }
 
   newDiv.appendChild(sp1);
 
@@ -160,4 +175,19 @@ export const addItemsToPagePok = (
     }
   });
   return lastIndex;
+};
+
+export const logIn = () => {
+  if (typeof window === "undefined") return false;
+  const key = "isLogined";
+  const isLogined = (window! as any).localStorage.getItem(key);
+
+  if (!isLogined) {
+    let pass = (window! as any).prompt("Zadejte heslo");
+    if (pass !== "JirkA1234") {
+      (window! as any).location.replace("/");
+    } else {
+      (window! as any).localStorage.setItem(key, "1");
+    }
+  }
 };
