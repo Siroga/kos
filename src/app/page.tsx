@@ -6,6 +6,10 @@ import React, { useState, useEffect } from "react";
 export default function Home() {
   logIn();
 
+  const fs = () => {
+    $("#container").get(0).requestFullscreen();
+  };
+
   return (
     <div className={styles.mainBlock}>
       <a href="/pokladna">

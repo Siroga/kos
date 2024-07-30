@@ -21,6 +21,7 @@ export default function Home() {
   const [modalIsOpen, setIsOpen] = React.useState(false);
   const [count, setCount] = useState(1);
   const [comment, setComment] = useState("");
+  const [fullScreenSt, setFullScreen] = useState(false);
 
   logIn();
 
@@ -86,6 +87,18 @@ export default function Home() {
     setIsOpen(true);
   }
 
+  function fullScreen() {
+    console.log(fullScreenSt);
+    if (!fullScreenSt) {
+      (document.getElementById("container") as any).requestFullscreen();
+      setFullScreen(true);
+    }
+    {
+      document.exitFullscreen();
+      setFullScreen(false);
+    }
+  }
+
   function addItem(menu: IMenu) {
     let item: IItem = {};
     const newScore = score > 200 ? 1 : score;
@@ -112,9 +125,25 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div id="container">
       <button className={styles.newButton} type="submit" onClick={addNew}>
         +
+      </button>
+      <button className="fullScreen" type="submit" onClick={fullScreen}>
+        <svg
+          width="30px"
+          height="30px"
+          viewBox="0 0 32 32"
+          id="i-fullscreen"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          stroke="currentcolor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        >
+          <path d="M4 12 L4 4 12 4 M20 4 L28 4 28 12 M4 20 L4 28 12 28 M28 20 L28 28 20 28" />
+        </svg>
       </button>
       <Modal
         isOpen={modalIsOpen}
@@ -135,6 +164,13 @@ export default function Home() {
                     onClick={() => {
                       addItem(item);
                     }}
+                    className={
+                      item.id === 1
+                        ? styles.green
+                        : item.id === 2
+                        ? styles.blue
+                        : ""
+                    }
                   >
                     {item.shortName} {/* <br /> <span>{item.name}</span> */}
                   </button>

@@ -43,7 +43,13 @@ export const btnAdd = (val: IItem, isTv: boolean = false) => {
 
   let newDiv = document.createElement("button") as any;
 
-  newDiv.className = val.type === MenuTypeEnum.KITCHEN ? "red" : "yellow";
+  if (val.type === MenuTypeEnum.KITCHEN) {
+    newDiv.className = `red ${
+      val.id === 1 ? "green" : val.id === 2 ? "blue" : ""
+    }`;
+  } else {
+    newDiv.className = "yellow";
+  }
 
   let newScore = val !== null && val.number! ? val.number! : 1;
 
@@ -112,7 +118,13 @@ export const btnAddPok = (val: IItem, isTv: boolean = false) => {
 
   let newDiv = document.createElement("button") as any;
 
-  newDiv.className = val.type === MenuTypeEnum.KITCHEN ? "red" : "yellow";
+  if (val.type === MenuTypeEnum.KITCHEN) {
+    newDiv.className = `red ${
+      val.id === 1 ? "green" : val.id === 2 ? "blue" : ""
+    }`;
+  } else {
+    newDiv.className = "yellow";
+  }
 
   let newScore = val !== null && val.number! ? val.number! : 1;
 
