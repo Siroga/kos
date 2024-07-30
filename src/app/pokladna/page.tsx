@@ -90,10 +90,9 @@ export default function Home() {
   function fullScreen() {
     console.log(fullScreenSt);
     if (!fullScreenSt) {
-      (document.getElementById("container") as any).requestFullscreen();
+      (document.body as any).requestFullscreen();
       setFullScreen(true);
-    }
-    {
+    } else {
       document.exitFullscreen();
       setFullScreen(false);
     }
@@ -138,9 +137,7 @@ export default function Home() {
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           stroke="currentcolor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
+          strokeWidth="2"
         >
           <path d="M4 12 L4 4 12 4 M20 4 L28 4 28 12 M4 20 L4 28 12 28 M28 20 L28 28 20 28" />
         </svg>
