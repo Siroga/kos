@@ -78,11 +78,11 @@ h1 {
         }
 
         &.green {
-          background-color: rgb(137 248 165);
+          background-color: rgb(137 248 165) !important;
         }
 
         &.blue {
-          background-color: rgb(137 236 248);
+          background-color: rgb(137 236 248) !important;
         }
 
         &.red {
@@ -102,6 +102,16 @@ h1 {
       button {
         background-color: rgb(25, 123, 41);
         color: azure;
+
+        &.green {
+          background-color: rgb(137 248 165) !important;
+          color: black;
+        }
+
+        &.blue {
+          background-color: rgb(137 236 248) !important;
+          color: black;
+        }
       }
     }
   }
