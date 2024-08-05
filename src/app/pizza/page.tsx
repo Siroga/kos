@@ -10,6 +10,7 @@ export default function Home() {
   const ordersRef = React.createRef<HTMLDivElement>();
   const [isConnected, setIsConnected] = useState(false);
   const [fullScreenSt, setFullScreen] = useState(false);
+  const [pizzaCount, setPizzaCount] = useState(0);
 
   logIn();
 
@@ -34,6 +35,7 @@ export default function Home() {
     socket.on("disconnect", onDisconnect);
 
     socket.on("items_list", (items: IItemsList) => {
+      setPizzaCount(items.pizzaCount);
       onItemsList(items);
     });
 
@@ -62,6 +64,7 @@ export default function Home() {
 
   return (
     <div id="container">
+      <div className={styles.pizzaCount}>Dnes: {pizzaCount}</div>
       <button className="fullScreen" type="submit" onClick={fullScreen}>
         <svg
           width="30px"

@@ -110,6 +110,7 @@ export default function Home() {
     item.status = "New";
     item.sound = true;
     item.type = menu.type;
+    item.dateTime = new Date();
     socket.emit("add_item", item);
     setLastScore(newScore);
     setIsOpen(false);

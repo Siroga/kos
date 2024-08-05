@@ -11,6 +11,8 @@ const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 let items = [];
 let lastIndex = 0;
+let pizzaCount = 0;
+let todayDate = new Date();
 
 app.prepare().then(() => {
   const httpServer = createServer(handler);
@@ -21,7 +23,16 @@ app.prepare().then(() => {
     console.log(socket.id);
 
     setTimeout(() => {
-      socket.emit("items_list", { items: items, lastIndex: lastIndex });
+      if (todayDate.getDay() !== new Date().getDay()) {
+        todayDate = new Date();
+        pizzaCount = 0;
+      }
+
+      socket.emit("items_list", {
+        items: items,
+        lastIndex: lastIndex,
+        pizzaCount: pizzaCount,
+      });
     }, 500);
 
     socket.on("connect", (message) => {
@@ -29,10 +40,21 @@ app.prepare().then(() => {
     });
     // Handle chat messages
     socket.on("add_item", (message) => {
+      if (todayDate.getDay() !== new Date().getDay()) {
+        todayDate = new Date();
+        pizzaCount = 0;
+      }
       lastIndex = message.number;
       items.push(message);
 
-      io.emit("items_list", { items: items, lastIndex: lastIndex }); // Broadcast the message to all connected clients
+      if (message.type === 1) {
+        pizzaCount++;
+      }
+      io.emit("items_list", {
+        items: items,
+        lastIndex: lastIndex,
+        pizzaCount: pizzaCount,
+      }); // Broadcast the message to all connected clients
 
       items = items.map((item) => {
         item.sound = false;
@@ -57,7 +79,15 @@ app.prepare().then(() => {
       }
 
       console.log("done");
-      io.emit("items_list", { items: items, lastIndex: lastIndex }); // Broadcast the message to all connected clients
+      if (todayDate.getDay() !== new Date().getDay()) {
+        todayDate = new Date();
+        pizzaCount = 0;
+      }
+      io.emit("items_list", {
+        items: items,
+        lastIndex: lastIndex,
+        pizzaCount: pizzaCount,
+      }); // Broadcast the message to all connected clients
     });
 
     socket.on("disconnect", () => {

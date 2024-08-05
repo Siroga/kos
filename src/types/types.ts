@@ -9,9 +9,11 @@ export interface IItem {
   count?: number;
   type?: MenuTypeEnum;
   sound?: boolean;
+  dateTime?: Date;
 }
 
 export interface IItemsList {
   items: IItem[];
   lastIndex: number;
+  pizzaCount: number;
 }
