@@ -22,6 +22,7 @@ export default function Home() {
   const [count, setCount] = useState(1);
   const [comment, setComment] = useState("");
   const [fullScreenSt, setFullScreen] = useState(false);
+  const [isPrinterConnected, setPrinterIsConnected] = useState(false);
 
   logIn();
 
@@ -59,6 +60,11 @@ export default function Home() {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+
+    socket.on("priter_status", (status: boolean) => {
+      setPrinterIsConnected(status);
+      console.log("Printer status:", status);
+    });
 
     socket.on("items_list", (items: IItemsList) => {
       onItemsList(items);
@@ -129,6 +135,13 @@ export default function Home() {
       <button className={styles.newButton} type="submit" onClick={addNew}>
         +
       </button>
+      <div
+        className={`${styles.printer} ${
+          isPrinterConnected ? styles.green : styles.red
+        }`}
+      >
+        Printer
+      </div>
       <button className="fullScreen" type="submit" onClick={fullScreen}>
         <svg
           width="30px"

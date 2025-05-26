@@ -84,6 +84,25 @@
   top: 20px;
 }
 
+.printer {
+  text-align: center;
+  font-size: 18px;
+  position: absolute;
+  height: 60px;
+  width: 150px;
+  padding-top: 0.5em;
+  padding-bottom: 1.6em;
+  right: 0px;
+  top: 20px;
+}
+
+.red {
+  color: red;
+}
+.green {
+  color: green;
+}
+
 .pok {
   display: grid;
   grid-template-columns: repeat(9, 1fr);

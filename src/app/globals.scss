@@ -116,6 +116,12 @@ h1 {
     }
   }
 
+  .red {
+    color: red;
+  }
+  .green {
+    color: green;
+  }
   .items {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
