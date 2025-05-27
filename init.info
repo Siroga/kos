@@ -1,0 +1,42 @@
+sudo apt update
+sudo apt install -y bluez psmisc 
+
+power on
+#agent KeyboardDisplay
+agent KeyboardOnly
+default-agent
+agent on
+scan on
+
+#sudo rfcomm bind /dev/rfcomm0 DC:0D:30:DE:19:D2
+pair DC:0D:30:DE:19:D2
+trust DC:0D:30:DE:19:D2
+connect DC:0D:30:DE:19:D2
+
+
+#ls -l /dev/rfcomm0
+
+chmod +x bt_printer.sh
+
+sudo nano /etc/systemd/system/bt_printer.service
+
+
+/*
+[Unit]
+Description=Автоперепідключення Bluetooth-принтера
+After=network.target bluetooth.target
+
+[Service]
+ExecStart=/home/user/kos/bt_printer.sh
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
+*/
+
+sudo systemctl daemon-reload
+sudo systemctl enable bt_printer.service
+sudo systemctl start bt_printer.service
+
+sudo systemctl status bt_printer.service
