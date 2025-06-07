@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEVICE=DC:0D:30:DE:19:D2
+DEVICE=DC:0D:30:DE:18:39
 RFCOMM_DEV=/dev/rfcomm0
 NODE_SCRIPT="/home/pi/print_server.js"
 

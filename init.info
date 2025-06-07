@@ -8,10 +8,10 @@ default-agent
 agent on
 scan on
 
-#sudo rfcomm bind /dev/rfcomm0 DC:0D:30:DE:19:D2
-pair DC:0D:30:DE:19:D2
-trust DC:0D:30:DE:19:D2
-connect DC:0D:30:DE:19:D2
+#sudo rfcomm bind /dev/rfcomm0 DC:0D:30:DE:18:39
+pair DC:0D:30:DE:18:39
+trust DC:0D:30:DE:18:39
+connect DC:0D:30:DE:18:39
 
 
 #ls -l /dev/rfcomm0
