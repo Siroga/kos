@@ -169,12 +169,6 @@ export const MenuItems: IMenu[] = [
     type: MenuTypeEnum.KITCHEN,
   },
   {
-    id: 27,
-    shortName: "ČEVB",
-    name: "",
-    type: MenuTypeEnum.KITCHEN,
-  },
-  {
     id: 28,
     shortName: "KARB",
     name: "",
@@ -183,6 +177,18 @@ export const MenuItems: IMenu[] = [
   {
     id: 29,
     shortName: "GUL KN",
+    name: "",
+    type: MenuTypeEnum.KITCHEN,
+  },
+  {
+    id: 27,
+    shortName: "VŘ",
+    name: "",
+    type: MenuTypeEnum.KITCHEN,
+  },
+  {
+    id: 30,
+    shortName: "VŘ CHL",
     name: "",
     type: MenuTypeEnum.KITCHEN,
   },
