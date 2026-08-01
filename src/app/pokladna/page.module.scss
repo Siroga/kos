@@ -118,3 +118,62 @@
     }
   }
 }
+
+/* Mobile-only responsive scaling for /pokladna (excluding popup/modal) */
+@media (max-width: 768px) {
+  .newButton {
+    width: 110px !important;
+    height: 48px !important;
+    font-size: 22px !important;
+    padding-top: 0.2em !important;
+    left: 10px !important;
+    top: 10px !important;
+  }
+
+  .printer {
+    width: 100px !important;
+    height: 48px !important;
+    font-size: 14px !important;
+    padding-top: 0.5em !important;
+    right: 10px !important;
+    top: 10px !important;
+  }
+
+  .pok {
+    display: flex !important;
+    flex-direction: column !important;
+    padding-top: 65px !important;
+
+    h1 {
+      font-size: 20px !important;
+      height: auto !important;
+      margin: 8px 0 !important;
+    }
+
+    .newItemsPok {
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      grid-auto-rows: 95px !important;
+      grid-gap: 8px !important;
+      margin-left: 4px !important;
+      margin-right: 4px !important;
+    }
+
+    button {
+      width: 100% !important;
+      font-size: 22px !important;
+      min-height: 95px !important;
+      padding: 6px !important;
+      border-radius: 8px !important;
+
+      div {
+        font-size: 15px !important;
+        line-height: 1.2 !important;
+
+        &.comment {
+          font-size: 13px !important;
+        }
+      }
+    }
+  }
+}
