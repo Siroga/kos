@@ -76,7 +76,7 @@ export default function Home() {
           <path d="M4 12 L4 4 12 4 M20 4 L28 4 28 12 M4 20 L4 28 12 28 M28 20 L28 28 20 28" />
         </svg>
       </button>
-      <div className={`main`} ref={ordersRef}>
+      <div className={`main ${styles.kuchyne}`} ref={ordersRef}>
         <div className={`orderNew`}>
           <h1>Nová objednávka</h1>
           <div className={`items newItems`} id="new-items" />

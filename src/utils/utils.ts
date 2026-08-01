@@ -109,7 +109,13 @@ export const btnAdd = (val: IItem, isTv: boolean = false) => {
 export const playSound = () => {
   try {
     const audio = new Audio("/sound.wav");
-    audio.play();
+    const promise = audio.play();
+    if (promise !== undefined) {
+      promise.catch((error) => {
+        // Autoplay was prevented or not allowed by browser user interaction policy
+        console.warn("Audio play prevented:", error.message);
+      });
+    }
   } catch (e) {}
 };
 

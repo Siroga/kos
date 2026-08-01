@@ -33,6 +33,10 @@ h1 {
   &.pageRightDivider {
     right: 33.2%;
   }
+
+  @media (max-width: 768px) {
+    display: none !important;
+  }
 }
 
 .main {
@@ -235,6 +239,10 @@ h1 {
 
 .newItemsPok {
   grid-template-columns: repeat(10, 1fr) !important;
+
+  @media (max-width: 500px) {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
 }
 
 nextjs-portal {
