@@ -20,6 +20,10 @@ app.prepare().then(() => {
 
   const io = new Server(httpServer);
 
+  setInterval(() => {
+    io.emit("priter_status", checkConnection()); // Broadcast printer status to all connected clients
+  }, 10000);
+
   io.on("connection", (socket) => {
     console.log(socket.id);
 
@@ -35,10 +39,6 @@ app.prepare().then(() => {
         pizzaCount: pizzaCount,
       });
     }, 500);
-
-    setInterval(() => {
-      io.emit("priter_status", checkConnection()); // Broadcast the message to all connected clients
-    }, 10000); // every hour
 
     socket.on("connect", (message) => {
       console.log("connect");

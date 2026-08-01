@@ -19,8 +19,8 @@ const runWebhook = async () => {
     );
   });
 };
-// To handle a GET request to /api
-export async function POST(req: NextRequest, res: NextResponse) {
+// To handle a POST request to /upgrade
+export async function POST(req: NextRequest) {
   try {
     await runWebhook();
     return NextResponse.json({ message: "Success" });
