@@ -174,8 +174,8 @@ async function connectPrinter(mac) {
     // 4. Release rfcomm 0 if active
     await disconnectRfcommProcess();
 
-    // 5. Spawn rfcomm connect 0 <MAC> 1
-    rfcommProcess = spawn("rfcomm", ["connect", "0", mac, "1"]);
+    // 5. Try sudo rfcomm bind 0 <MAC> 1 (or sudo rfcomm connect fallback)
+    rfcommProcess = spawn("sudo", ["rfcomm", "bind", "0", mac, "1"]);
     rfcommProcess.on("error", (err) => {
       console.error("rfcomm process error:", err);
     });
@@ -191,6 +191,19 @@ async function connectPrinter(mac) {
       if (checkConnection()) {
         connected = true;
         break;
+      }
+    }
+
+    // Fallback if bind didn't immediately make /dev/rfcomm0 visible or if active connect is required
+    if (!connected) {
+      await disconnectRfcommProcess();
+      rfcommProcess = spawn("sudo", ["rfcomm", "connect", "0", mac, "1"]);
+      for (let i = 0; i < 10; i++) {
+        await new Promise((r) => setTimeout(r, 500));
+        if (checkConnection()) {
+          connected = true;
+          break;
+        }
       }
     }
 
@@ -221,7 +234,7 @@ async function disconnectRfcommProcess() {
     rfcommProcess = null;
   }
   try {
-    await execAsync("rfcomm release 0 2>/dev/null");
+    await execAsync("sudo rfcomm release 0 2>/dev/null");
   } catch (e) { }
 }
 
@@ -241,7 +254,7 @@ async function removeAllDevices() {
     const { stdout: devOut } = await execAsync("bluetoothctl devices || true");
     const { stdout: pairedOut } = await execAsync("bluetoothctl paired-devices || true");
     const combined = devOut + "\n" + pairedOut;
-    
+
     const macSet = new Set();
     const lines = combined.split("\n");
     for (const line of lines) {
