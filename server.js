@@ -6,8 +6,8 @@ const fs = require("fs");
 const bt = require("./bluetooth");
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
-const port = 8888;
+const hostname = process.env.HOSTNAME || "0.0.0.0";
+const port = parseInt(process.env.PORT, 10) || 8888;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
