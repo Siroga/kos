@@ -2,30 +2,37 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const { Server } = require("socket.io");
+const fs = require("fs");
+const bt = require("./bluetooth");
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
 const port = 8888;
-// when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
+
 let items = [];
 let lastIndex = 0;
 let pizzaCount = 0;
 let todayDate = new Date();
-const fs = require("fs");
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
   const httpServer = createServer(handler);
-
   const io = new Server(httpServer);
 
+  // Auto-connect printer from config.json on startup
+  const config = await bt.getConfig();
+  if (config.printerMac) {
+    console.log(`Initializing BT reconnect loop for saved printer: ${config.printerMac}`);
+    bt.startReconnectLoop(config.printerMac);
+  }
+
   setInterval(() => {
-    io.emit("priter_status", checkConnection()); // Broadcast printer status to all connected clients
-  }, 10000);
+    io.emit("priter_status", bt.checkConnection()); // Broadcast printer status
+  }, 5000);
 
   io.on("connection", (socket) => {
-    console.log(socket.id);
+    console.log("Socket connected:", socket.id);
 
     setTimeout(() => {
       if (todayDate.getDay() !== new Date().getDay()) {
@@ -40,10 +47,63 @@ app.prepare().then(() => {
       });
     }, 500);
 
-    socket.on("connect", (message) => {
-      console.log("connect");
+    // Bluetooth printer management events
+    socket.on("bt_check_adapter", async () => {
+      const status = await bt.checkAdapterStatus();
+      socket.emit("bt_adapter_status", status);
     });
-    // Handle chat messages
+
+    socket.on("bt_get_config", async () => {
+      const cfg = await bt.getConfig();
+      socket.emit("bt_config_data", { printerMac: cfg.printerMac || null });
+    });
+
+    socket.on("bt_scan_start", () => {
+      bt.scanDevices(
+        (device) => {
+          socket.emit("bt_scan_result", device);
+        },
+        (res) => {
+          socket.emit("bt_scan_done", res);
+        }
+      );
+    });
+
+    socket.on("bt_scan_stop", () => {
+      bt.stopScan();
+      socket.emit("bt_scan_done", { success: true });
+    });
+
+    socket.on("bt_connect", async (data) => {
+      const mac = data && data.mac;
+      if (!mac) {
+        socket.emit("bt_connect_status", { success: false, error: "Chybí MAC adresa" });
+        return;
+      }
+
+      const res = await bt.connectPrinter(mac);
+      if (res.success) {
+        await bt.saveConfig({ printerMac: mac });
+        bt.startReconnectLoop(mac);
+      }
+      socket.emit("bt_connect_status", res);
+      io.emit("priter_status", bt.checkConnection());
+    });
+
+    socket.on("bt_disconnect", async () => {
+      bt.stopReconnectLoop();
+      const res = await bt.disconnectPrinter();
+      await bt.saveConfig({ printerMac: null });
+      socket.emit("bt_connect_status", { success: false, mac: null });
+      io.emit("priter_status", false);
+    });
+
+    socket.on("bt_test_print", async () => {
+      const res = await bt.testPrint();
+      socket.emit("bt_print_result", res);
+    });
+
+    // Handle order items
     socket.on("add_item", (message) => {
       if (todayDate.getDay() !== new Date().getDay()) {
         todayDate = new Date();
@@ -59,8 +119,9 @@ app.prepare().then(() => {
         items: items,
         lastIndex: lastIndex,
         pizzaCount: pizzaCount,
-      }); // Broadcast the message to all connected clients
-      print(message);
+      });
+
+      bt.printMessage(message);
 
       items = items.map((item) => {
         item.sound = false;
@@ -69,22 +130,16 @@ app.prepare().then(() => {
     });
 
     socket.on("update_item", (message) => {
-      console.log("start");
       if (message.status === "Ready" || message.status === "Progress") {
         items.map((item) => {
           if (item.number === message.number) {
             item.status = message.status;
           }
         });
-        console.log("updated");
       } else if (message.status === "Done") {
-        items = items.filter(function (el) {
-          return el.number != message.number;
-        });
-        console.log("updated");
+        items = items.filter((el) => el.number != message.number);
       }
 
-      console.log("done");
       if (todayDate.getDay() !== new Date().getDay()) {
         todayDate = new Date();
         pizzaCount = 0;
@@ -93,11 +148,11 @@ app.prepare().then(() => {
         items: items,
         lastIndex: lastIndex,
         pizzaCount: pizzaCount,
-      }); // Broadcast the message to all connected clients
+      });
     });
 
     socket.on("disconnect", () => {
-      console.log("A user disconnected");
+      console.log("Client disconnected:", socket.id);
     });
   });
 
@@ -110,51 +165,3 @@ app.prepare().then(() => {
       console.log(`> Ready on http://${hostname}:${port}`);
     });
 });
-
-function checkConnection() {
-  const devicePath = "/dev/rfcomm0";
-  if (!fs.existsSync(devicePath)) {
-    return false;
-  }
-  return true;
-}
-
-function print(message) {
-  const bigNumber = lastIndex.toString();
-  const now = new Date();
-  const pad = (n) => n.toString().padStart(2, "0");
-  const dateString =
-    `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()} ` +
-    `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-  //const dateString = now.toLocaleString();
-  // Create Buffer with commands and text:
-  const escposCommands = Buffer.concat([
-    Buffer.from([0x1b, 0x40]), // ESC @ - initialize
-    Buffer.from([0x1b, 0x61, 0x01]), // ESC a 1 - center alignment
-    Buffer.from(dateString + "\n", "ascii"),
-    Buffer.from([0x1d, 0x21, 0x77]), // GS ! 0x77 - max font size (8x8)
-    Buffer.from(bigNumber, "ascii"), // text (number)
-    Buffer.from("\n\n", "ascii"), // new lines (feed paper)
-    Buffer.from([0x1d, 0x21, 0x00]),
-    Buffer.from(message.name + "-" + message.count, "ascii"), // new lines (feed paper)
-    Buffer.from("\n", "ascii"), // new lines (feed paper)
-    Buffer.from(message.comment, "ascii"), // new lines (feed paper)
-    Buffer.from("\n\n\n\n\n", "ascii"), // new lines (feed paper)
-    Buffer.from([0x1d, 0x56, 0x00]), // GS V 0 - cut paper
-  ]);
-  // Open device file
-  const devicePath = "/dev/rfcomm0";
-  if (!fs.existsSync(devicePath)) {
-    return;
-  }
-
-  const stream = fs.createWriteStream(devicePath);
-  stream.on("error", (err) => {
-    console.error("Print error:", err.message);
-  });
-  stream.on("open", () => {
-    stream.write(escposCommands, () => {
-      stream.end();
-    });
-  });
-}
