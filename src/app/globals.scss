@@ -256,11 +256,12 @@ nextjs-portal {
   font-weight: bold;
   color: azure;
   padding: 0em;
-  position: absolute;
-  height: 60px;
-  width: 60px;
+  position: fixed !important;
+  height: 60px !important;
+  width: 60px !important;
   padding-top: 0.5em;
   padding-bottom: 1.6em;
-  right: 20px;
-  bottom: 20px;
+  right: 20px !important;
+  bottom: 20px !important;
+  z-index: 1000;
 }
