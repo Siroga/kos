@@ -23,6 +23,11 @@ export default function Home() {
           <span>Pizza</span>
         </div>
       </a>
+      <a href="/settings">
+        <div className={styles.menuItem}>
+          <span>Nastavení</span>
+        </div>
+      </a>
     </div>
   );
 }
