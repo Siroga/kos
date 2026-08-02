@@ -106,6 +106,16 @@ export default function SettingsPage() {
       }
     });
 
+    socket.on("bt_remove_all_status", (res: { success: boolean; error?: string }) => {
+      if (res.success) {
+        setSavedMac(null);
+        setDiscoveredDevices([]);
+        setMessage({ text: "Všechna spárovaná zařízení byla odebrána", type: "success" });
+      } else {
+        setMessage({ text: `Chyba při odebírání zařízení: ${res.error}`, type: "error" });
+      }
+    });
+
     return () => {
       socket.off("priter_status");
       socket.off("bt_adapter_status");
@@ -114,6 +124,7 @@ export default function SettingsPage() {
       socket.off("bt_scan_done");
       socket.off("bt_connect_status");
       socket.off("bt_print_result");
+      socket.off("bt_remove_all_status");
     };
   }, [isAuthenticated]);
 
@@ -153,10 +164,90 @@ export default function SettingsPage() {
     setMessage({ text: "Tiskárna byla odpojena", type: "success" });
   };
 
+  const handleRemoveAll = () => {
+    setMessage(null);
+    socket.emit("bt_remove_all");
+  };
+
   const handleTestPrint = () => {
     setMessage(null);
     setIsTestingPrint(true);
     socket.emit("bt_test_print");
+  };
+
+  const [currentPasswordInput, setCurrentPasswordInput] = useState("");
+  const [newPasswordInput, setNewPasswordInput] = useState("");
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
+  const [passwordMsg, setPasswordMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordMsg(null);
+
+    if (newPasswordInput !== confirmPasswordInput) {
+      setPasswordMsg({ text: "Nová hesla se neshodují", type: "error" });
+      return;
+    }
+
+    if (!newPasswordInput.trim()) {
+      setPasswordMsg({ text: "Nové heslo nesmí být prázdné", type: "error" });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: currentPasswordInput,
+          newPassword: newPasswordInput,
+        }),
+      });
+
+      const data = await res.json();
+      setIsChangingPassword(false);
+
+      if (res.ok && data.success) {
+        setPasswordMsg({ text: "Heslo bylo úspěšně změněno", type: "success" });
+        setCurrentPasswordInput("");
+        setNewPasswordInput("");
+        setConfirmPasswordInput("");
+      } else {
+        setPasswordMsg({ text: data.error || "Chyba při změně hesla", type: "error" });
+      }
+    } catch (err: any) {
+      setIsChangingPassword(false);
+      setPasswordMsg({ text: "Chyba serveru při změně hesla", type: "error" });
+    }
+  };
+
+  const [isRebooting, setIsRebooting] = useState(false);
+  const [rebootMsg, setRebootMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+
+  const handleReboot = async () => {
+    const confirmed = window.confirm("Opravdu chcete restartovat zařízení?");
+    if (!confirmed) return;
+
+    setRebootMsg(null);
+    setIsRebooting(true);
+
+    try {
+      const res = await fetch("/api/system/reboot", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRebootMsg({ text: "Zařízení se restartuje...", type: "success" });
+      } else {
+        setIsRebooting(false);
+        setRebootMsg({ text: data.error || "Chyba při restartu zařízení", type: "error" });
+      }
+    } catch (err: any) {
+      setIsRebooting(false);
+      setRebootMsg({ text: "Chyba při odesílání požadavku na restart", type: "error" });
+    }
   };
 
   if (!isAuthenticated) {
@@ -214,6 +305,10 @@ export default function SettingsPage() {
                 Odpojit
               </button>
             )}
+
+            <button className={styles.btnDanger} onClick={handleRemoveAll}>
+              Odebrat všechna zařízení
+            </button>
           </div>
 
           {message && (
@@ -240,6 +335,73 @@ export default function SettingsPage() {
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        <div className={styles.section} style={{ marginTop: "40px" }}>
+          <h2>Změna hesla</h2>
+          <form className={styles.passwordForm} onSubmit={handleChangePassword}>
+            <div className={styles.inputGroup}>
+              <label>Současné heslo</label>
+              <input
+                type="password"
+                value={currentPasswordInput}
+                onChange={(e) => setCurrentPasswordInput(e.target.value)}
+                required
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Nové heslo</label>
+              <input
+                type="password"
+                value={newPasswordInput}
+                onChange={(e) => setNewPasswordInput(e.target.value)}
+                required
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Potvrzení nového hesla</label>
+              <input
+                type="password"
+                value={confirmPasswordInput}
+                onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className={styles.btnPrimary}
+              disabled={isChangingPassword}
+              style={{ marginTop: "10px" }}
+            >
+              {isChangingPassword ? "Ukládám..." : "Změnit heslo"}
+            </button>
+          </form>
+
+          {passwordMsg && (
+            <div className={`${styles.toast} ${styles[passwordMsg.type]}`}>
+              {passwordMsg.text}
+            </div>
+          )}
+        </div>
+
+        <div className={styles.section} style={{ marginTop: "40px" }}>
+          <h2>Správa systému</h2>
+          <p style={{ color: "#666", marginBottom: "15px" }}>
+            Restartuje zařízení. Akce vyžaduje potvrzení.
+          </p>
+          <button
+            className={styles.btnDanger}
+            onClick={handleReboot}
+            disabled={isRebooting}
+          >
+            {isRebooting ? "Restartuji..." : "Restartovat zařízení"}
+          </button>
+
+          {rebootMsg && (
+            <div className={`${styles.toast} ${styles[rebootMsg.type]}`}>
+              {rebootMsg.text}
             </div>
           )}
         </div>

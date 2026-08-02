@@ -76,12 +76,13 @@ app.prepare().then(async () => {
 
     socket.on("bt_connect", async (data) => {
       const mac = data && data.mac;
+      const pin = (data && data.pin) || "0000";
       if (!mac) {
         socket.emit("bt_connect_status", { success: false, error: "Chybí MAC adresa" });
         return;
       }
 
-      const res = await bt.connectPrinter(mac);
+      const res = await bt.connectPrinter(mac, pin);
       if (res.success) {
         await bt.saveConfig({ printerMac: mac });
         bt.startReconnectLoop(mac);
@@ -95,6 +96,12 @@ app.prepare().then(async () => {
       const res = await bt.disconnectPrinter();
       await bt.saveConfig({ printerMac: null });
       socket.emit("bt_connect_status", { success: false, mac: null });
+      io.emit("priter_status", false);
+    });
+
+    socket.on("bt_remove_all", async () => {
+      const res = await bt.removeAllDevices();
+      socket.emit("bt_remove_all_status", res);
       io.emit("priter_status", false);
     });
 

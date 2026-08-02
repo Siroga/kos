@@ -83,20 +83,20 @@
   gap: 15px;
   margin-bottom: 25px;
   flex-wrap: wrap;
+}
 
-  button {
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+.btnPrimary, .btnSecondary, .btnDanger {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 
@@ -182,5 +182,38 @@
     background-color: #fff2f0;
     border: 1px solid #ffccc7;
     color: #ff4d4f;
+  }
+}
+
+.passwordForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+  margin-top: 10px;
+
+  .inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input {
+      padding: 10px 14px;
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+
+      &:focus {
+        border-color: #1890ff;
+      }
+    }
   }
 }

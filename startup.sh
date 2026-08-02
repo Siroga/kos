@@ -14,6 +14,7 @@ done
 $CHROMIUM_BIN --kiosk \
   --noerrdialogs \
   --disable-infobars \
+  --hide-scrollbars \
   --enable-offline-auto-reload \
   --enable-offline-auto-reload-visible-only \
   --check-for-update-interval=31536000 \

@@ -130,10 +130,36 @@ async function connectPrinter(mac) {
   if (!mac) return { success: false, error: "MAC adresa je prázdná" };
 
   try {
-    // 1. Pair (ignore error if already paired)
-    try {
-      await execAsync(`bluetoothctl pair ${mac}`);
-    } catch (e) { }
+    // 0. Stop scanning before connecting so bluetoothctl devices stops filling with nearby un-paired devices
+    await stopScan();
+
+    // 1. Auto-confirm numeric passkey on phone using bluetoothctl interactive agent
+    await new Promise((resolve) => {
+      const bt = spawn("bluetoothctl", []);
+      let done = false;
+      const finish = () => {
+        if (!done) {
+          done = true;
+          try { bt.kill(); } catch (e) { }
+          resolve();
+        }
+      };
+
+      bt.stdout.on("data", (data) => {
+        const str = data.toString();
+        if (str.includes("Confirm passkey") || str.includes("yes/no")) {
+          bt.stdin.write("yes\n");
+        }
+      });
+
+      bt.stdin.write("agent NoInputNoOutput\n");
+      bt.stdin.write("default-agent\n");
+      bt.stdin.write(`pair ${mac}\n`);
+      bt.stdin.write(`trust ${mac}\n`);
+      bt.stdin.write(`connect ${mac}\n`);
+
+      setTimeout(finish, 6000);
+    });
 
     // 2. Trust
     try {
@@ -203,6 +229,69 @@ async function disconnectPrinter() {
   await disconnectRfcommProcess();
   currentPrinterMac = null;
   return { success: true };
+}
+
+// Remove / unpair all Bluetooth devices (paired or cached) and reset config
+async function removeAllDevices() {
+  try {
+    stopReconnectLoop();
+    await disconnectRfcommProcess();
+
+    // 1. Get all devices from bluetoothctl devices & bluetoothctl paired-devices
+    const { stdout: devOut } = await execAsync("bluetoothctl devices || true");
+    const { stdout: pairedOut } = await execAsync("bluetoothctl paired-devices || true");
+    const combined = devOut + "\n" + pairedOut;
+    
+    const macSet = new Set();
+    const lines = combined.split("\n");
+    for (const line of lines) {
+      const match = line.match(/Device\s+([0-9A-FA-F:]{17})/i);
+      if (match) {
+        macSet.add(match[1]);
+      }
+    }
+
+    // 2. Remove each device via interactive bluetoothctl session
+    await new Promise((resolve) => {
+      const bt = spawn("bluetoothctl", []);
+      let done = false;
+      const finish = () => {
+        if (!done) {
+          done = true;
+          try { bt.kill(); } catch (e) { }
+          resolve();
+        }
+      };
+
+      for (const mac of macSet) {
+        bt.stdin.write(`untrust ${mac}\n`);
+        bt.stdin.write(`disconnect ${mac}\n`);
+        bt.stdin.write(`remove ${mac}\n`);
+      }
+
+      setTimeout(finish, 3000);
+    });
+
+    // 3. Fallback direct CLI removal
+    for (const mac of macSet) {
+      try { await execAsync(`bluetoothctl untrust ${mac}`); } catch (e) { }
+      try { await execAsync(`bluetoothctl disconnect ${mac}`); } catch (e) { }
+      try { await execAsync(`bluetoothctl remove ${mac}`); } catch (e) { }
+    }
+
+    // Direct cleanup in BlueZ storage if any persistent devices remain
+    try {
+      await execAsync("sudo rm -rf /var/lib/bluetooth/*/*/* 2>/dev/null || true");
+      await execAsync("sudo systemctl restart bluetooth || true");
+    } catch (e) { }
+
+    await saveConfig({ printerMac: null });
+    currentPrinterMac = null;
+    return { success: true };
+  } catch (e) {
+    console.error("Error removing all devices:", e);
+    return { success: false, error: e.message };
+  }
 }
 
 // Reconnect loop (replaces bt_printer.sh)
@@ -320,6 +409,7 @@ module.exports = {
   stopScan,
   connectPrinter,
   disconnectPrinter,
+  removeAllDevices,
   startReconnectLoop,
   stopReconnectLoop,
   printMessage,
