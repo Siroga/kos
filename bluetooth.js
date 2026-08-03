@@ -426,18 +426,44 @@ async function printMessage(message) {
   ]);
 
   return new Promise((resolve) => {
-    const stream = fs.createWriteStream("/dev/rfcomm0");
-    stream.on("error", async (err) => {
-      console.error("Print error:", err.message);
+    let resolved = false;
+    const finish = async (result) => {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timeoutId);
+        resolve(result);
+      }
+    };
+
+    const timeoutId = setTimeout(async () => {
+      console.error("Print timeout (3s exceeded)");
       await disconnectRfcommProcess();
-      resolve({ success: false, error: err.message });
-    });
-    stream.on("open", () => {
-      stream.write(escposCommands, () => {
-        stream.end();
-        resolve({ success: true });
+      finish({ success: false, error: "Vypršel časový limit tisku (3s)" });
+    }, 3000);
+
+    try {
+      const stream = fs.createWriteStream("/dev/rfcomm0", { flags: "w" });
+
+      stream.on("error", async (err) => {
+        console.error("Print error:", err.message);
+        await disconnectRfcommProcess();
+        finish({ success: false, error: err.message });
       });
-    });
+
+      stream.on("open", () => {
+        stream.write(escposCommands, (err) => {
+          if (err) {
+            console.error("Print write error:", err.message);
+            finish({ success: false, error: err.message });
+          } else {
+            stream.end();
+            finish({ success: true });
+          }
+        });
+      });
+    } catch (e) {
+      finish({ success: false, error: e.message });
+    }
   });
 }
 
