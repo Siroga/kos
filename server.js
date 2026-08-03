@@ -27,8 +27,8 @@ app.prepare().then(async () => {
     bt.startReconnectLoop(config.printerMac);
   }
 
-  setInterval(() => {
-    io.emit("priter_status", bt.checkConnection()); // Broadcast printer status
+  setInterval(async () => {
+    io.emit("priter_status", await bt.checkConnection()); // Broadcast printer status
   }, 5000);
 
   io.on("connection", (socket) => {
@@ -56,6 +56,11 @@ app.prepare().then(async () => {
     socket.on("bt_get_config", async () => {
       const cfg = await bt.getConfig();
       socket.emit("bt_config_data", { printerMac: cfg.printerMac || null });
+    });
+
+    socket.on("bt_get_device_info", async (mac) => {
+      const info = await bt.getDeviceInfo(mac);
+      socket.emit("bt_device_info", info);
     });
 
     socket.on("bt_scan_start", () => {
@@ -88,7 +93,7 @@ app.prepare().then(async () => {
         bt.startReconnectLoop(mac);
       }
       socket.emit("bt_connect_status", res);
-      io.emit("priter_status", bt.checkConnection());
+      io.emit("priter_status", await bt.checkConnection());
     });
 
     socket.on("bt_disconnect", async () => {

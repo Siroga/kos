@@ -10,11 +10,24 @@ interface IDevice {
   name: string;
 }
 
+interface IDeviceInfo {
+  mac: string;
+  name: string;
+  alias: string;
+  paired: boolean;
+  trusted: boolean;
+  connected: boolean;
+  blocked: boolean;
+  rssi: string | null;
+  raw?: string;
+}
+
 export default function SettingsPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPrinterConnected, setIsPrinterConnected] = useState(false);
   const [adapterPowered, setAdapterPowered] = useState(true);
   const [savedMac, setSavedMac] = useState<string | null>(null);
+  const [deviceInfo, setDeviceInfo] = useState<IDeviceInfo | null>(null);
 
   const [isScanning, setIsScanning] = useState(false);
   const [scanCountdown, setScanCountdown] = useState(0);
@@ -59,9 +72,11 @@ export default function SettingsPage() {
     // Check adapter & config
     socket.emit("bt_check_adapter");
     socket.emit("bt_get_config");
+    socket.emit("bt_get_device_info");
 
     socket.on("priter_status", (status: boolean) => {
       setIsPrinterConnected(status);
+      socket.emit("bt_get_device_info");
     });
 
     socket.on("bt_adapter_status", (data: { powered: boolean }) => {
@@ -70,6 +85,13 @@ export default function SettingsPage() {
 
     socket.on("bt_config_data", (data: { printerMac: string | null }) => {
       setSavedMac(data.printerMac);
+      if (data.printerMac) {
+        socket.emit("bt_get_device_info", data.printerMac);
+      }
+    });
+
+    socket.on("bt_device_info", (info: IDeviceInfo | null) => {
+      setDeviceInfo(info);
     });
 
     socket.on("bt_scan_result", (device: IDevice) => {
@@ -120,6 +142,7 @@ export default function SettingsPage() {
       socket.off("priter_status");
       socket.off("bt_adapter_status");
       socket.off("bt_config_data");
+      socket.off("bt_device_info");
       socket.off("bt_scan_result");
       socket.off("bt_scan_done");
       socket.off("bt_connect_status");
@@ -277,6 +300,18 @@ export default function SettingsPage() {
               <div className={styles.statusRow}>
                 <span>Uložená MAC adresa:</span>
                 <code>{savedMac}</code>
+              </div>
+            )}
+
+            {deviceInfo && (
+              <div style={{ marginTop: "15px", paddingTop: "15px", borderTop: "1px solid #e8e8e8", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", fontSize: "15px", color: "#1a1a1a" }}>
+                <div><span style={{ color: "#555" }}>Název:</span> <strong>{deviceInfo.name}</strong></div>
+                <div><span style={{ color: "#555" }}>Alias:</span> <strong>{deviceInfo.alias}</strong></div>
+                <div><span style={{ color: "#555" }}>Spárováno (Paired):</span> <strong style={{ color: deviceInfo.paired ? "#2e7d32" : "#c62828" }}>{deviceInfo.paired ? "Ano ✅" : "Ne ❌"}</strong></div>
+                <div><span style={{ color: "#555" }}>Důvěryhodné (Trusted):</span> <strong style={{ color: deviceInfo.trusted ? "#2e7d32" : "#c62828" }}>{deviceInfo.trusted ? "Ano ✅" : "Ne ❌"}</strong></div>
+                <div><span style={{ color: "#555" }}>BT Spojení (Connected):</span> <strong style={{ color: deviceInfo.connected ? "#2e7d32" : "#c62828" }}>{deviceInfo.connected ? "Ano ✅" : "Ne ❌"}</strong></div>
+                <div><span style={{ color: "#555" }}>Zablokováno (Blocked):</span> <strong style={{ color: deviceInfo.blocked ? "#d84315" : "#2e7d32" }}>{deviceInfo.blocked ? "Ano ⚠️" : "Ne ❌"}</strong></div>
+                {deviceInfo.rssi && <div><span style={{ color: "#555" }}>Signál (RSSI):</span> <strong>{deviceInfo.rssi} dBm</strong></div>}
               </div>
             )}
           </div>

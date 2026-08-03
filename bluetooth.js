@@ -51,10 +51,65 @@ async function checkAdapterStatus() {
   }
 }
 
-// Check if /dev/rfcomm0 exists
-function checkConnection() {
+// Check if /dev/rfcomm0 exists and printer is actually connected via Bluetooth
+async function checkConnection() {
   const devicePath = "/dev/rfcomm0";
-  return fs.existsSync(devicePath);
+  if (!fs.existsSync(devicePath)) return false;
+
+  if (!currentPrinterMac) {
+    const config = await getConfig();
+    currentPrinterMac = config.printerMac || null;
+  }
+
+  if (!currentPrinterMac) return false;
+
+  try {
+    const { stdout } = await execAsync(`bluetoothctl info ${currentPrinterMac}`);
+    return /Connected:\s+yes/i.test(stdout);
+  } catch (e) {
+    return false;
+  }
+}
+
+// Get detailed bluetoothctl info for a device
+async function getDeviceInfo(mac) {
+  const targetMac = mac || currentPrinterMac;
+  if (!targetMac) return null;
+
+  try {
+    const { stdout } = await execAsync(`bluetoothctl info ${targetMac}`);
+    const nameMatch = stdout.match(/Name:\s+(.*)/i);
+    const aliasMatch = stdout.match(/Alias:\s+(.*)/i);
+    const pairedMatch = stdout.match(/Paired:\s+(.*)/i);
+    const trustedMatch = stdout.match(/Trusted:\s+(.*)/i);
+    const connectedMatch = stdout.match(/Connected:\s+(.*)/i);
+    const blockedMatch = stdout.match(/Blocked:\s+(.*)/i);
+    const rssiMatch = stdout.match(/RSSI:\s+(.*)/i);
+
+    return {
+      mac: targetMac,
+      name: nameMatch ? nameMatch[1].trim() : "Neznámé",
+      alias: aliasMatch ? aliasMatch[1].trim() : "Neznámé",
+      paired: pairedMatch ? pairedMatch[1].trim() === "yes" : false,
+      trusted: trustedMatch ? trustedMatch[1].trim() === "yes" : false,
+      connected: connectedMatch ? connectedMatch[1].trim() === "yes" : false,
+      blocked: blockedMatch ? blockedMatch[1].trim() === "yes" : false,
+      rssi: rssiMatch ? rssiMatch[1].trim() : null,
+      raw: stdout.trim(),
+    };
+  } catch (e) {
+    // If device is not in bluetoothctl database yet (e.g. after removeAll or unpair)
+    return {
+      mac: targetMac,
+      name: "Zařízení nenalezeno v BlueZ",
+      alias: "-",
+      paired: false,
+      trusted: false,
+      connected: false,
+      blocked: false,
+      rssi: null,
+    };
+  }
 }
 
 // Scan Bluetooth devices (streams devices via onDevice callback, completes via onDone)
@@ -174,7 +229,7 @@ async function connectPrinter(mac) {
     // 4. Release rfcomm 0 if active
     await disconnectRfcommProcess();
 
-    // 5. Try sudo rfcomm bind 0 <MAC> 1 (or sudo rfcomm connect fallback)
+    // 5. Try sudo rfcomm bind 0 <MAC> 1 (preferred non-blocking mode)
     rfcommProcess = spawn("sudo", ["rfcomm", "bind", "0", mac, "1"]);
     rfcommProcess.on("error", (err) => {
       console.error("rfcomm process error:", err);
@@ -188,19 +243,19 @@ async function connectPrinter(mac) {
     let connected = false;
     for (let i = 0; i < 10; i++) {
       await new Promise((r) => setTimeout(r, 500));
-      if (checkConnection()) {
+      if (await checkConnection()) {
         connected = true;
         break;
       }
     }
 
-    // Fallback if bind didn't immediately make /dev/rfcomm0 visible or if active connect is required
+    // Fallback using bind again after full release if first attempt failed
     if (!connected) {
       await disconnectRfcommProcess();
-      rfcommProcess = spawn("sudo", ["rfcomm", "connect", "0", mac, "1"]);
+      rfcommProcess = spawn("sudo", ["rfcomm", "bind", "0", mac, "1"]);
       for (let i = 0; i < 10; i++) {
         await new Promise((r) => setTimeout(r, 500));
-        if (checkConnection()) {
+        if (await checkConnection()) {
           connected = true;
           break;
         }
@@ -229,12 +284,13 @@ async function connectPrinter(mac) {
 async function disconnectRfcommProcess() {
   if (rfcommProcess) {
     try {
-      rfcommProcess.kill();
+      rfcommProcess.kill("SIGKILL");
     } catch (e) { }
     rfcommProcess = null;
   }
   try {
-    await execAsync("sudo rfcomm release 0 2>/dev/null");
+    await execAsync("sudo killall rfcomm 2>/dev/null || true");
+    await execAsync("sudo rfcomm release 0 2>/dev/null || true");
   } catch (e) { }
 }
 
@@ -308,19 +364,19 @@ async function removeAllDevices() {
 }
 
 // Reconnect loop (replaces bt_printer.sh)
-function startReconnectLoop(mac) {
+async function startReconnectLoop(mac) {
   stopReconnectLoop();
   if (!mac) return;
 
   currentPrinterMac = mac;
 
   // Initial attempt
-  if (!checkConnection()) {
+  if (!(await checkConnection())) {
     connectPrinter(mac);
   }
 
-  reconnectInterval = setInterval(() => {
-    if (!checkConnection() && currentPrinterMac) {
+  reconnectInterval = setInterval(async () => {
+    if (!(await checkConnection()) && currentPrinterMac) {
       console.log("🔵 Connecting Bluetooth printer...", currentPrinterMac);
       connectPrinter(currentPrinterMac);
     }
@@ -336,8 +392,8 @@ function stopReconnectLoop() {
 
 // ESC/POS Print function
 async function printMessage(message) {
-  if (!checkConnection()) {
-    return { success: false, error: "Tiskárna není připojena (/dev/rfcomm0 neexistuje)" };
+  if (!(await checkConnection())) {
+    return { success: false, error: "Tiskárna není připojena (/dev/rfcomm0 neexistuje nebo je відключена)" };
   }
 
   // If newly connected within last 2 seconds, wait settlement delay
@@ -371,8 +427,9 @@ async function printMessage(message) {
 
   return new Promise((resolve) => {
     const stream = fs.createWriteStream("/dev/rfcomm0");
-    stream.on("error", (err) => {
+    stream.on("error", async (err) => {
       console.error("Print error:", err.message);
+      await disconnectRfcommProcess();
       resolve({ success: false, error: err.message });
     });
     stream.on("open", () => {
@@ -418,6 +475,7 @@ module.exports = {
   saveConfig,
   checkAdapterStatus,
   checkConnection,
+  getDeviceInfo,
   scanDevices,
   stopScan,
   connectPrinter,
