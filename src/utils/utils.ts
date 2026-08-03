@@ -195,17 +195,37 @@ export const addItemsToPagePok = (
   return lastIndex;
 };
 
-export const logIn = () => {
+export const verifyPasswordOnServer = async (password: string): Promise<boolean> => {
+  try {
+    const res = await fetch("/api/auth/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    return data.success === true;
+  } catch (e) {
+    return false;
+  }
+};
+
+export const logIn = async () => {
   if (typeof window === "undefined") return false;
   const key = "isLogined";
   const isLogined = (window! as any).localStorage.getItem(key);
 
   if (!isLogined) {
     let pass = (window! as any).prompt("Zadejte heslo");
-    if (pass !== "JirkA1234") {
+    if (!pass) {
+      (window! as any).location.replace("/");
+      return;
+    }
+    const isValid = await verifyPasswordOnServer(pass);
+    if (!isValid) {
       (window! as any).location.replace("/");
     } else {
       (window! as any).localStorage.setItem(key, "1");
     }
   }
 };
+

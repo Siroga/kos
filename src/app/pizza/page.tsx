@@ -11,6 +11,7 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
   const [fullScreenSt, setFullScreen] = useState(false);
   const [pizzaCount, setPizzaCount] = useState(0);
+  const [statusCounts, setStatusCounts] = useState({ newCount: 0, progressCount: 0, readyCount: 0 });
 
   logIn();
 
@@ -48,6 +49,14 @@ export default function Home() {
 
   function onItemsList(items: IItemsList) {
     console.log("get data");
+    const pizzaItems = (items.items || []).filter(
+      (item) => item.type === MenuTypeEnum.PIZZA
+    );
+    const newCount = pizzaItems.filter((i) => i.status === "New").length;
+    const progressCount = pizzaItems.filter((i) => i.status === "Progress").length;
+    const readyCount = pizzaItems.filter((i) => i.status === "Ready").length;
+    setStatusCounts({ newCount, progressCount, readyCount });
+
     addItemsToPage(items.items, MenuTypeEnum.PIZZA);
   }
 
@@ -65,6 +74,11 @@ export default function Home() {
   return (
     <div id="container">
       <div className={styles.pizzaCount}>Dnes: {pizzaCount}</div>
+      <div className={styles.mobileStatusCounts}>
+        <span className={styles.statusNew}>Nové: {statusCounts.newCount}</span>
+        <span className={styles.statusProgress}>Připravuje se: {statusCounts.progressCount}</span>
+        <span className={styles.statusReady}>Připraveno: {statusCounts.readyCount}</span>
+      </div>
       <button className="fullScreen" type="submit" onClick={fullScreen}>
         <svg
           width="30px"
